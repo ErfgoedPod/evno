@@ -1,0 +1,43 @@
+################################################################################
+# SERVICES
+################################################################################
+services:
+
+  # ------------------------------------------------------------
+  # Community Solid Server
+  # ------------------------------------------------------------
+  solid-css:
+    container_name: css
+    image: solidproject/community-server:latest
+    build: https://github.com/CommunitySolidServer/CommunitySolidServer.git#main
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      # ---- Format: ----
+      - ./.solid:/data
+
+    networks:
+      - app_net
+
+  # ------------------------------------------------------------
+  # Solid Collection Registration System
+  # ------------------------------------------------------------
+  # solid-crs:
+  #   container_name: crs
+  #   image: ghcr.io/netwerk-digitaal-erfgoed/solid-crs-manage:latest
+
+  #   ports:
+  #     - "3001:80"
+
+  #   networks:
+  #     - app_net
+
+
+################################################################################
+# NETWORK
+################################################################################
+networks:
+  app_net:
+    driver: bridge
