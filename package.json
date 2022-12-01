@@ -14,11 +14,13 @@
     "build": "tsc",
     "test": "jest",
     "size": "size-limit",
+    "lint": "eslint",
+    "prepare": "yarn build",
     "analyze": "size-limit --why"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "tsdx lint"
+      "pre-commit": "yarn lint"
     }
   },
   "prettier": {
@@ -48,6 +50,7 @@
     "@size-limit/preset-small-lib": "^8.1.0",
     "@types/jest": "^29.2.3",
     "babel-jest": "^29.3.1",
+    "eslint": "^8.28.0",
     "husky": "^8.0.2",
     "jest": "^29.3.1",
     "size-limit": "^8.1.0",
@@ -58,6 +61,7 @@
   "dependencies": {
     "@rdfjs/types": "^1.1.0",
     "abstract-level": "^1.0.3",
+    "chalk": "^5.1.2",
     "jsonld-streaming-parser": "^3.0.1",
     "level": "^8.0.0",
     "poll": "^3.2.1",
