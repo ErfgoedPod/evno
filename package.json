@@ -2,6 +2,9 @@
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
+  "bin": {
+    "ldn": "dist/cli.js"
+  },
   "typings": "dist/index.d.ts",
   "files": [
     "dist",
@@ -48,6 +51,7 @@
     "@babel/preset-typescript": "^7.18.6",
     "@jest/globals": "^29.3.1",
     "@size-limit/preset-small-lib": "^8.1.0",
+    "@types/figlet": "^1.5.5",
     "@types/jest": "^29.2.3",
     "babel-jest": "^29.3.1",
     "eslint": "^8.28.0",
@@ -61,7 +65,7 @@
   "dependencies": {
     "@rdfjs/types": "^1.1.0",
     "abstract-level": "^1.0.3",
-    "chalk": "^5.1.2",
+    "figlet": "^1.5.2",
     "jsonld-streaming-parser": "^3.0.1",
     "level": "^8.0.0",
     "poll": "^3.2.1",
