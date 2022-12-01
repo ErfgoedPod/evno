@@ -1,37 +1,82 @@
 import { EventEmitter } from 'events';
 import { poll } from 'poll'
-import { join } from 'path'
 import { JsonLdParser } from "jsonld-streaming-parser";
-import { authenticateToken } from "../../Bashlib/dist/authentication/AuthenticationToken"
-import { list, makeDirectory } from "../../Bashlib/dist"
+import { list, makeDirectory, authenticateToken, generateCSSToken } from "solid-bashlib";
+import { ReadableWebToNodeStream } from 'readable-web-to-node-stream';
+import { Level } from "level";
+import { Quad } from "@rdfjs/types"
 
-export class InboxEmitter extends EventEmitter {
+const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+const AS_NS = 'https://www.w3.org/ns/activitystreams#'
+const AS_types = [
+    'Create',
+    'Update',
+    'Remove',
+    'Announce',
+    'Offer',
+    'Accept',
+    'Reject'].map((k) => AS_NS + k)
+
+export interface INotification {
+    quads: Quad[],
+    id: string,
+}
+
+export async function parseNotification(stream: EventEmitter, jsonldParser: JsonLdParser): Promise<INotification> {
+    return new Promise((resolve, reject) => {
+        const quads: Quad[] = []
+        let id: string;
+        jsonldParser
+            .import(stream)
+            .on('data', async (quad: Quad) => {
+                quads.push(quad)
+
+                if (!id &&
+                    quad.predicate.value == RDF_NS + 'type' &&
+                    AS_types.includes(quad.object.value)) {
+                    id = quad.subject.value
+                }
+            })
+            .on('error', (e: Error) => reject(e))
+            .on('end', () => {
+                resolve({
+                    id, quads
+                })
+            });
+    })
+
+}
+
+export class InboxWatcher extends EventEmitter {
 
     private baseUrl: string;
     private inbox: string;
     private fetch: undefined | typeof fetch;
-    private freq = 1000;
+    private freq: number = 1000;
+
+    private db: Level<string, any>;
 
     constructor(baseUrl: string) {
         super()
 
         this.baseUrl = baseUrl;
         this.inbox = `${baseUrl}inbox/`
+        this.db = new Level<string, any>('./db', { valueEncoding: 'json' })
     }
 
-    async login(): Promise<InboxEmitter> {
+    async login(options: {
+        name: string,
+        email: string,
+        password: string,
+        idp: string,
+        clientCredentialsTokenStorageLocation?: string
+    }): Promise<InboxWatcher> {
         /**
          *  Create authenticated fetch
          */
 
-        let options = {
-            idp: this.baseUrl,                            // (optional) Solid identity provider - this value is stored in the generated token
-            clientCredentialsTokenStorageLocation: join(__dirname, "./.css-auth-token"),  // (optional) Storage location of the stored client credentials token (defaults to ~/.solid/.css-auth-token).
-            sessionInfoStorageLocation: join(__dirname, "./.session-info-token"),             // (optional) Storage location of session information to reuse in subsequent runs of the application (defaults to ~/.solid/.session-info-token).
-            verbose: true,                               // (optional) Log authentication errors
-        }
-
-        let { fetch, webId } = await authenticateToken(options);
+        let token = await generateCSSToken(options)
+        let { fetch, webId } = await authenticateToken(token, this.baseUrl);
 
         console.log(`Logged in as ${webId}`)
         this.fetch = fetch
@@ -69,29 +114,23 @@ export class InboxEmitter extends EventEmitter {
                 if (this.fetch) {
                     const response: Response = await this.fetch(info.url)
 
-                    // parse
+                    // parse the notification
                     const jsonldParser = JsonLdParser.fromHttpResponse(
                         response.url,
                         response.headers.get('content-type') || "application/ld+json"
                     );
 
-                    const body = response.body;
+                    // transform bodystream
+                    const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream());
 
-                    if (body != null) {
-                        jsonldParser
-                            .import(body)
-                            .on('data', (quad) => {
+                    // parse the notification
+                    const notification = await parseNotification(bodyStream, jsonldParser)
 
-                                // if (notification.modified < start)
-                                // continue;
-
-                            })
-                            .on('error', console.error)
-                            .on('end', () => console.log('All triples were parsed!'));
+                    // emit an event with notification
+                    if (await this.db.get(notification.id)) {
+                        this.emit('notification', notification)
+                        this.db.put(notification.id, true)
                     }
-
-                    // do something with notification
-                    this.emit('notification', {})
                 }
             }
         }, this.freq)
