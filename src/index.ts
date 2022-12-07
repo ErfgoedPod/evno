@@ -114,12 +114,12 @@ export class InboxWatcher extends EventEmitter {
 
     private db: Level<string, any>;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, options: { cachePath?: string, inboxPath?:string} = {}) {
         super()
 
         this.baseUrl = baseUrl;
-        this.inbox = `${baseUrl}inbox/`
-        this.db = new Level<string, any>('./db', { valueEncoding: 'json' })
+        this.inbox = baseUrl + (options.inboxPath || 'inbox/')
+        this.db = new Level<string, any>(options.cachePath || './.cache/', { valueEncoding: 'json' })
     }
 
     async init(options: {

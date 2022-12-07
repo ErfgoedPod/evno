@@ -22,7 +22,7 @@ program
 program.command('watch', {})
   .description("Watch an inbox for new notifications")
   .argument("<base_url>", 'Base URL of the Solid pod')
-  .option("-c, --cache  [value]", "Path to cache database", "~/.cache/seen_notifications.db")
+  .option("-c, --cache  [value]", "Path to cache database", "~/.cache/")
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
