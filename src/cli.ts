@@ -50,7 +50,7 @@ program.command('send')
   const myTextStream = fs.createReadStream(path)  
   const notification = await parseNotification(myTextStream, myParser);
 
-  const success = sendNotification(notification, inboxUrl, program.opts())
+  const success = await sendNotification(notification, inboxUrl, program.opts())
   console.log(success)
 })
 
