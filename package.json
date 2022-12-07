@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -52,6 +53,7 @@
     "@jest/globals": "^29.3.1",
     "@size-limit/preset-small-lib": "^8.1.0",
     "@types/figlet": "^1.5.5",
+    "@types/rdfjs__serializer-jsonld-ext": "^2.0.5",
     "@types/jest": "^29.2.3",
     "babel-jest": "^29.3.1",
     "eslint": "^8.28.0",
@@ -63,6 +65,7 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
+    "@rdfjs/serializer-jsonld-ext": "^3.0.0",
     "@rdfjs/types": "^1.1.0",
     "abstract-level": "^1.0.3",
     "figlet": "^1.5.2",
@@ -70,6 +73,6 @@
     "level": "^8.0.0",
     "poll": "^3.2.1",
     "readable-web-to-node-stream": "^3.0.2",
-    "solid-bashlib": "^0.2.1"
+    "solid-bashlib": "../Bashlib"
   }
 }

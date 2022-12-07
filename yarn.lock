@@ -3258,6 +3258,21 @@
   dependencies:
     "@rdfjs/data-model" "^1.2.0"
 
+"@rdfjs/serializer-jsonld-ext@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@rdfjs/serializer-jsonld-ext/-/serializer-jsonld-ext-3.0.0.tgz#96e05494638ec9affdafd63dd8e4da90e7fa01e6"
+  integrity sha512-XwxKz7sAVIlOixcYc6INzWNi46g2m0VSdW4CQw5C2RimYqjQOXnNlZ5HuF3LYCEtha9CybCDHodUBi8mU+xVpA==
+  dependencies:
+    "@rdfjs/sink" "^1.0.3"
+    concat-stream "^2.0.0"
+    jsonld "^5.2.0"
+    readable-stream "^3.6.0"
+
+"@rdfjs/sink@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@rdfjs/sink/-/sink-1.0.3.tgz#cdbb4ecf0ff34e6ad6c301a5bc221508c820568c"
+  integrity sha512-2KfYa8mAnptRNeogxhQqkWNXqfYVWO04jQThtXKepySrIwYmz83+WlevQtA4VDLFe+kFd2TwgL29ekPe5XVUfA==
+
 "@rdfjs/types@*", "@rdfjs/types@>=1.0.1", "@rdfjs/types@^1.1.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@rdfjs/types/-/types-1.1.0.tgz"
@@ -3386,6 +3401,11 @@
     expect "^29.0.0"
     pretty-format "^29.0.0"
 
+"@types/jsonld@*":
+  version "1.5.8"
+  resolved "https://registry.yarnpkg.com/@types/jsonld/-/jsonld-1.5.8.tgz#292008d52d996358273401d31b1445fa14e16e2b"
+  integrity sha512-4l5t/jDnJpqZ+i7CLTTgPcT5BYXnAnwJupb07aAokPufCV0SjDHcwctUkSTuhIuSU9yHok+WOOngIGCtpL96gw==
+
 "@types/lru-cache@^5.1.1":
   version "5.1.1"
   resolved "https://registry.npmjs.org/@types/lru-cache/-/lru-cache-5.1.1.tgz"
@@ -3429,6 +3449,14 @@
   resolved "https://registry.npmjs.org/@types/rdfjs__dataset/-/rdfjs__dataset-1.0.5.tgz"
   integrity sha512-8OBC9Kr/ZSgNoUTe5mHTDPHaPt8Xen4XbYfqcbYv56d+4WdKliHXaFmFc0L4I5vsynE5JGu21Hvg2zWgX1Az6Q==
   dependencies:
+    rdf-js "^4.0.2"
+
+"@types/rdfjs__serializer-jsonld-ext@^2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@types/rdfjs__serializer-jsonld-ext/-/rdfjs__serializer-jsonld-ext-2.0.5.tgz#fd1303cf9a2b1ff692db3efaf1a1017c5c64b1e0"
+  integrity sha512-+Tmrw3M+lH7okHfGvUEpbNhfPg59y+RQSpbAHJKKcCW29a2AzMzjux46JyZvuFo8uVy8TI41hW8PwfbbTZG+Vg==
+  dependencies:
+    "@types/jsonld" "*"
     rdf-js "^4.0.2"
 
 "@types/readable-stream@^2.3.11", "@types/readable-stream@^2.3.13":
@@ -4081,6 +4109,16 @@ concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz"
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
+
+concat-stream@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/concat-stream/-/concat-stream-2.0.0.tgz#414cf5af790a48c60ab9be4527d56d5e41133cb1"
+  integrity sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==
+  dependencies:
+    buffer-from "^1.0.0"
+    inherits "^2.0.3"
+    readable-stream "^3.0.2"
+    typedarray "^0.0.6"
 
 content-disposition@0.5.4:
   version "0.5.4"
@@ -6536,7 +6574,7 @@ readable-stream-node-to-web@^1.0.1:
   resolved "https://registry.npmjs.org/readable-stream-node-to-web/-/readable-stream-node-to-web-1.0.1.tgz"
   integrity sha512-OGzi2VKLa8H259kAx7BIwuRrXHGcxeHj4RdASSgEGBP9Q2wowdPvBc65upF4Q9O05qWgKqBw1+9PiLTtObl7uQ==
 
-readable-stream@^3.4.0, readable-stream@^3.6.0:
+readable-stream@^3.0.2, readable-stream@^3.4.0, readable-stream@^3.6.0:
   version "3.6.0"
   resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.0.tgz"
   integrity sha512-BViHy7LKeTz4oNnkcLJ+lVSL6vpiFeX6/d3oSH8zCW7UxP2onchk+vTGB143xuFjHS3deTgkKoXXymXqymiIdA==
@@ -6849,10 +6887,8 @@ slash@^3.0.0:
   resolved "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz"
   integrity sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==
 
-solid-bashlib@^0.2.1:
+solid-bashlib@../Bashlib:
   version "0.2.1"
-  resolved "https://registry.npmjs.org/solid-bashlib/-/solid-bashlib-0.2.1.tgz"
-  integrity sha512-keaB1VQKHdT7hmGuwNP3hYttdfNFvhLOnld2TgbtwOPO37Hkl7GJx3SVxcHHzSNdXHWGBMSGR9TnRLQOh560Dw==
   dependencies:
     "@comunica/query-sparql" "^2.1.0"
     "@inrupt/solid-client" "^1.21.0"
@@ -7200,6 +7236,11 @@ type-is@~1.6.18:
   dependencies:
     media-typer "0.3.0"
     mime-types "~2.1.24"
+
+typedarray@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
+  integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
 typescript@^4.9.3:
   version "4.9.3"
