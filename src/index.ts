@@ -59,7 +59,7 @@ export async function sendNotification(notification: INotification, inboxUrl: st
     idp: string,
     authUrl?: string,
     clientCredentialsTokenStorageLocation?: string
-}) {
+}): Promise<{ success: boolean, location: string | null }> {
     // serialize to JSON-LD
     const context: Context = { "@vocab": "https://www.w3.org/ns/activitystreams" }
 
@@ -82,13 +82,13 @@ export async function sendNotification(notification: INotification, inboxUrl: st
             result += jsonld
         })
         output.on('error', (e) => reject(e))
-        output.on('end', () => {
-            authFetch(inboxUrl, {
+        output.on('end', async () => {
+            const response = await authFetch(inboxUrl, {
                 method: "POST",
                 body: result,
                 headers: { "content-type": "application/ld+json" }
             })
-            resolve(true)
+            resolve({ success: response.ok, location: response.headers.get('location') })
         })
     })
 }

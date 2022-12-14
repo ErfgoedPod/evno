@@ -41,7 +41,7 @@ program.command('watch', {})
 
 program.command('send')
 .description("Send a notification to a inbox")
-.argument("<inboxUrl>", 'Base URL of the Solid pod')
+.argument("<inboxUrl>", 'URL of the LDN inbox')
 .argument("<path>", 'Path to JSON-LD notification')
 .option("-i, --idp <idp>", "Identity provider", "http://localhost:3000/")
 .action(async (inboxUrl, path) => {
@@ -50,8 +50,11 @@ program.command('send')
   const myTextStream = fs.createReadStream(path)  
   const notification = await parseNotification(myTextStream, myParser);
 
-  const success = await sendNotification(notification, inboxUrl, program.opts())
-  console.log(success)
+  const {success, location} = await sendNotification(notification, inboxUrl, program.opts())
+  if (success) {
+    return console.log('Notification %s delivered at %s',notification.id, location)
+  }
+  console.log('Failed to deliver notification %s',notification.id)
 })
 
 program.parse(process.argv)
