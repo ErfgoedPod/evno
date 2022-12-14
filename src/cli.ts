@@ -2,7 +2,7 @@
 
 import { Command } from "commander"
 import figlet from "figlet"
-import { InboxWatcher, sendNotification, parseNotification } from "./index.js"
+import { InboxWatcher, sendNotification, parseNotification, serialize } from "./index.js"
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser";
 
@@ -22,20 +22,23 @@ program
 program.command('watch', {})
   .description("Watch an inbox for new notifications")
   .argument("<base_url>", 'Base URL of the Solid pod')
-  .option("-c, --cache  [value]", "Path to cache database", "~/.cache/")
+  .option("-c, --cache  [value]", "Path to cache database", "~/.cache/cache.dsb")
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
+  .option("-, --stdout", "Pipe output to stdout", false)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
   .action(async (baseUrl, options) => {
-    const watcher = new InboxWatcher(baseUrl)
-    console.log('Logging in as %s', options.name)
-    const inbox = await watcher.init(program.opts())
+    const watcher = new InboxWatcher(baseUrl);
+    
+    (!options.stdout) && console.log('Logging in as %s', options.name);
+    
+    const inbox:string = await watcher.init(program.opts());
 
-    console.log('Initalized inbox at %s', inbox)
+    (!options.stdout) && console.log('Initalized inbox at %s', inbox);
 
-    await watcher.start()
-    watcher.on('notification', (n) => {
-      console.log('received %s', n.id)
+    await watcher.start(options.strategy)
+    watcher.on('notification', async (n) => {
+      console.log(await serialize(n))
     })
   })
 

@@ -2,14 +2,14 @@ import { EventEmitter } from 'events'
 import { poll } from 'poll'
 import { JsonLdParser } from "jsonld-streaming-parser"
 import { list, makeDirectory, authenticateToken, generateCSSToken, changePermissions } from "solid-bashlib"
-import { ReadableWebToNodeStream } from 'readable-web-to-node-stream'
-import { Level } from "level"
+//import { ReadableWebToNodeStream } from 'readable-web-to-node-stream'
 import { Quad } from "@rdfjs/types"
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
 import { Context } from 'jsonld/jsonld-spec'
 import { Readable } from 'readable-stream'
 import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
+import Store from 'krieven-data-file'
 
 const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
 const AS_NS = 'https://www.w3.org/ns/activitystreams#'
@@ -60,6 +60,21 @@ export async function sendNotification(notification: INotification, inboxUrl: st
     authUrl?: string,
     clientCredentialsTokenStorageLocation?: string
 }): Promise<{ success: boolean, location: string | null }> {
+
+    // login 
+    const authFetch = (await login(options.authUrl || options.idp || inboxUrl, options)).fetch
+
+    const result = await serialize(notification);
+    const response = await authFetch(inboxUrl, {
+        method: "POST",
+        body: result,
+        headers: { "content-type": "application/ld+json" }
+    })
+
+    return { success: response.ok, location: response.headers.get('location') }
+}
+
+export function serialize(notification:INotification): Promise<string> {
     // serialize to JSON-LD
     const context: Context = { "@vocab": "https://www.w3.org/ns/activitystreams" }
 
@@ -70,10 +85,6 @@ export async function sendNotification(notification: INotification, inboxUrl: st
     notification.quads.forEach((quad) => input.push(quad))
     input.push(null)
 
-    // login 
-    const authFetch = (await login(options.authUrl || options.idp || inboxUrl, options)).fetch
-
-    // send 
     const output = serializerJsonld.import(input)
 
     return new Promise((resolve, reject) => {
@@ -83,12 +94,7 @@ export async function sendNotification(notification: INotification, inboxUrl: st
         })
         output.on('error', (e) => reject(e))
         output.on('end', async () => {
-            const response = await authFetch(inboxUrl, {
-                method: "POST",
-                body: result,
-                headers: { "content-type": "application/ld+json" }
-            })
-            resolve({ success: response.ok, location: response.headers.get('location') })
+            resolve(result)
         })
     })
 }
@@ -108,7 +114,7 @@ async function login(baseUrl: string, options: {
     let token = await generateCSSToken(options)
     let { fetch, webId } = await authenticateToken(token, baseUrl)
 
-    console.log(`Logged in as ${webId}`)
+   //console.log(`Logged in as ${webId}`)
 
     return { fetch, webId }
 }
@@ -120,14 +126,14 @@ export class InboxWatcher extends EventEmitter {
     private fetch: undefined | typeof fetch
     private freq: number = 1000;
 
-    private db: Level<string, any>
+    private db: Store<boolean>;
 
     constructor(baseUrl: string, options: { cachePath?: string, inboxPath?: string } = {}) {
         super()
 
         this.baseUrl = baseUrl
         this.inboxUrl = baseUrl + (options.inboxPath || 'inbox/')
-        this.db = new Level<string, any>(options.cachePath || './.cache/', { valueEncoding: 'json' })
+        this.db = new Store(options.cachePath || './.cache/cache.dsb', 512);
     }
 
     async init(options: {
@@ -162,7 +168,7 @@ export class InboxWatcher extends EventEmitter {
         return this.inboxUrl
     }
 
-    async start() {
+    async start(strategy:string) {
 
         const fetchOptions = {
             fetch: this.fetch,         // an (authenticated) fetch function
@@ -170,12 +176,12 @@ export class InboxWatcher extends EventEmitter {
         }
 
         poll(async () => {
-            console.log("Polling %s at %s", this.inboxUrl, new Date().toISOString())
+            //console.log("Polling %s at %s", this.inboxUrl, new Date().toISOString())
             const items = await list(this.inboxUrl, fetchOptions)
             for (const item of items) {
                 if (this.fetch) {
                     const response: Response = await this.fetch(item.url)
-
+                    
                     // parse the notification
                     const jsonldParser = JsonLdParser.fromHttpResponse(
                         response.url,
@@ -183,15 +189,21 @@ export class InboxWatcher extends EventEmitter {
                     )
 
                     // transform bodystream
-                    const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+                    //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+                    
+                    // TODO: Fix this when NodeJS vs. Stream API chaos is over
+                    const bodyStream = new Readable()
+                    bodyStream.push(await response.text())
+                    bodyStream.push(null)
 
                     // parse the notification
                     const notification = await parseNotification(bodyStream, jsonldParser)
 
                     // emit an event with notification
-                    if (await this.db.get(notification.id)) {
-                        //this.emit('notification', notification)
-                        this.db.put(notification.id, true)
+                    const idToCheck = strategy == 'notification_id' ? item.url : notification.id;
+                    if (!this.db.get(idToCheck)) {
+                        this.emit('notification', notification)
+                        this.db.put(idToCheck, true)
                     }
                 }
             }
