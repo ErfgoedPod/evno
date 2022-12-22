@@ -121,41 +121,47 @@ async function login(baseUrl: string, options: {
 
 export class InboxWatcher extends EventEmitter {
 
-    private baseUrl: string
-    private inboxUrl: string
+    private webId: string | undefined
     private fetch: undefined | typeof fetch
     private freq: number = 1000;
+    private stopPolling = false;
 
     private db: Store<boolean>;
 
-    constructor(baseUrl: string, options: { cachePath?: string, inboxPath?: string } = {}) {
+    private constructor(session: SessionInfo, options: { cachePath?: string, inboxPath?: string } = {}) {
         super()
 
-        this.baseUrl = baseUrl
-        this.inboxUrl = baseUrl + (options.inboxPath || 'inbox/')
+        this.fetch = session.fetch;
+        this.webId = session.webId;
         this.db = new Store(options.cachePath || './.cache/cache.dsb', 512);
     }
 
-    async init(options: {
+    public static async create (baseUrl: string, options: { 
         name: string,
         email: string,
         password: string,
         idp: string,
-        clientCredentialsTokenStorageLocation?: string
-    }): Promise<string> {
-        const { fetch, webId } = await login(this.baseUrl, options)
-        this.fetch = fetch
+        clientCredentialsTokenStorageLocation?: string,
+        cachePath?: string,
+    }){
+        const session = await login(baseUrl, options)
 
+        return new InboxWatcher(session);
+    }
+
+    public async init(baseUrl: string, inboxPath: string = 'inbox/'): Promise<string> {
         const fetchOptions = {
-            fetch,         // an (authenticated) fetch function
+            fetch: this.fetch,         // an (authenticated) fetch function
             verbose: true
         }
 
-        const containers = await list(this.baseUrl, fetchOptions)
+        const containers = await list(baseUrl, fetchOptions)
 
-        if (!containers.find(el => el.url == this.inboxUrl)) {
+        const inboxUrl = baseUrl + inboxPath
+
+        if (!containers.find(el => el.url == inboxUrl)) {
             try {
-                await makeDirectory(this.inboxUrl, fetchOptions)
+                await makeDirectory(inboxUrl, fetchOptions)
 
             }
             catch (e) {
@@ -163,21 +169,27 @@ export class InboxWatcher extends EventEmitter {
             }
         }
 
-        const permission: PermissionOperation = { type: 'agent', append: true, read: true, id: webId }
-        await changePermissions(this.inboxUrl, [permission], fetchOptions)
-        return this.inboxUrl
+        const permission: PermissionOperation = { type: 'agent', append: true, read: true, id: this.webId }
+        await changePermissions(inboxUrl, [permission], fetchOptions)
+        return inboxUrl
     }
 
-    async start(strategy:string) {
+    public stop() {
+        this.stopPolling = true;
+    }
+
+    public start(inboxUrl:string, strategy:string = 'activity') {
 
         const fetchOptions = {
             fetch: this.fetch,         // an (authenticated) fetch function
             verbose: true
         }
 
+        this.stopPolling = false;
+
         poll(async () => {
             //console.log("Polling %s at %s", this.inboxUrl, new Date().toISOString())
-            const items = await list(this.inboxUrl, fetchOptions)
+            const items = await list(inboxUrl, fetchOptions)
             for (const item of items) {
                 if (this.fetch) {
                     const response: Response = await this.fetch(item.url)
@@ -207,7 +219,7 @@ export class InboxWatcher extends EventEmitter {
                     }
                 }
             }
-        }, this.freq)
+        }, this.freq, () => this.stopPolling)
         return this
     }
 
