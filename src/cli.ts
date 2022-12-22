@@ -19,7 +19,7 @@ program
   .requiredOption("-p, --password <password>", "Password")
   .option("-i, --idp <idp>", "Identity provider", "http://localhost:3000/")
 
-program.command('watch', {})
+program.command('watch')
   .description("Watch an inbox for new notifications")
   .argument("<baseUrl>", 'Base URL of the Solid pod')
   .argument("<inboxUrl>", 'Base URL of the Solid pod')
@@ -28,22 +28,22 @@ program.command('watch', {})
   .option("-, --stdout", "Pipe output to stdout", false)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
-  .action(async (baseUrl, options) => {
+  .action(async (baseUrl, inboxUrl, options) => {
 
     const watcher = await InboxWatcher.create(baseUrl, options);
 
     (!options.stdout) && console.log('Logging in as %s', options.name)
 
-    watcher.start(options.strategy)
+    watcher.start(inboxUrl, options.strategy)
     watcher.on('notification', async (n) => {
       console.log(await serialize(n))
     })
   })
 
-program.command('init', {})
+program.command('init')
   .description('Initialize an inbox.')
   .argument("<baseUrl>", 'Base URL of the Solid pod')
-  .argument("<inboxPath>", 'Path to inbox', 'inbox/')
+  .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
     const gOptions = program.opts()
     const watcher = await InboxWatcher.create(baseUrl, {
