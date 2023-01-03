@@ -8,10 +8,10 @@ import { JsonLdParser } from "jsonld-streaming-parser"
 
 const program = new Command()
 
-console.log(figlet.textSync("ldnlib"))
+console.log(figlet.textSync("EventNotifications"))
 
 program
-  .name("ldn")
+  .name("evno")
   .version("1.0.0")
   .description("A CLI for using Linked Data Notification in Solid Pods")
   .requiredOption("-n, --name <username>", "Username")
@@ -41,7 +41,7 @@ program.command('watch')
   })
 
 program.command('init')
-  .description('Initialize an inbox.')
+  .description('Initialize an inbox')
   .argument("<baseUrl>", 'Base URL of the Solid pod')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {

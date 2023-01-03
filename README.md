@@ -1,5 +1,7 @@
 # Event Notifications Typescript library
 
+JavaScript library to participate in a value-adding network using [Event Notifications](https://www.eventnotifications.net/) and Solid pods.
+
 ## Install
 
 ```
@@ -10,10 +12,10 @@ yarn link
 
 ## Usage in NodeJS
 
-### initalizing an inbox
+### Initalizing an LDN inbox
 
 ```javascript
-import { InboxWatcher } from "ldnlib"
+import { InboxWatcher } from "evno"
 const options = {
   name: "", email: "", password: "", idp: ""
 }
@@ -22,10 +24,10 @@ const inbox = await watcher.init("https://localhost:3000/", "inbox/");
 console.log(inbox) // "https://localhost:3000/inbox/"
 ```
 
-### Watching an inbox
+### Watching an LDN inbox
 
 ```javascript
-import { InboxWatcher } from "ldnlib"
+import { InboxWatcher } from "evno"
 const options = {
   name: "", email: "", password: "", idp: ""
 }
@@ -43,7 +45,7 @@ watcher.on('notification', async (n) => {
 ### Sending a nodification
 
 ```javascript
-import { sendNotification, parseNotification } from "ldnlib"
+import { sendNotification, parseNotification } from "evno"
 const options = {
   name: "", email: "", password: "", idp: ""
 }
@@ -61,13 +63,13 @@ const { success, location } = await sendNotification(notification, "https://loca
 ## Usage in command-line
 
 ```
-  _     _       _ _ _     
- | | __| |_ __ | (_) |__  
- | |/ _` | '_ \| | | '_ \ 
- | | (_| | | | | | | |_) |
- |_|\__,_|_| |_|_|_|_.__/ 
-                          
-Usage: ldn [options] [command]
+  _____                 _   _   _       _   _  __ _           _   _                 
+ | ____|_   _____ _ __ | |_| \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___ 
+ |  _| \ \ / / _ \ '_ \| __|  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|
+ | |___ \ V /  __/ | | | |_| |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \
+ |_____| \_/ \___|_| |_|\__|_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/
+                                                                                    
+Usage: evno [options] [command]
 
 A CLI for using Linked Data Notification in Solid Pods
 
