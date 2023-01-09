@@ -128,22 +128,26 @@ export class InboxWatcher extends EventEmitter {
     private freq: number = 1000;
     private stopPolling = false;
 
-    private db: Store<boolean>;
+    private db?: Store<boolean>;
 
-    private constructor(session: SessionInfo, options: { cachePath?: string, inboxPath?: string } = {}) {
+    private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string, inboxPath?: string } = {}) {
         super()
 
         this.fetch = session.fetch;
         this.webId = session.webId;
 
-        const cachePath = options.cachePath || './.cache/cache.dsb'
-        const cacheDir = dirname(cachePath)
         
-        if (!fs.existsSync(cacheDir)){
-            fs.mkdirSync(cacheDir, { recursive: true });
-        }
 
-        this.db = new Store(cachePath, 512);
+        if (options.cache) {
+            const cachePath = options.cachePath || './.cache/cache.dsb'
+            const cacheDir = dirname(cachePath)
+
+            if (!fs.existsSync(cacheDir)){
+                fs.mkdirSync(cacheDir, { recursive: true });
+            }
+
+            this.db = new Store(cachePath, 512);
+        }
     }
 
     public static async create (baseUrl: string, options: { 
@@ -223,7 +227,7 @@ export class InboxWatcher extends EventEmitter {
 
                     // emit an event with notification
                     const idToCheck = strategy == 'notification_id' ? item.url : notification.id;
-                    if (!this.db.get(idToCheck)) {
+                    if (this.db && !this.db.get(idToCheck)) {
                         this.emit('notification', notification)
                         this.db.put(idToCheck, true)
                     }
