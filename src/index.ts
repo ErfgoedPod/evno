@@ -10,6 +10,8 @@ import { Readable } from 'readable-stream'
 import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import Store from 'krieven-data-file'
+import * as fs from 'fs'
+import { dirname } from 'path'
 
 const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
 const AS_NS = 'https://www.w3.org/ns/activitystreams#'
@@ -133,7 +135,15 @@ export class InboxWatcher extends EventEmitter {
 
         this.fetch = session.fetch;
         this.webId = session.webId;
-        this.db = new Store(options.cachePath || './.cache/cache.dsb', 512);
+
+        const cachePath = options.cachePath || './.cache/cache.dsb'
+        const cacheDir = dirname(cachePath)
+        
+        if (!fs.existsSync(cacheDir)){
+            fs.mkdirSync(cacheDir, { recursive: true });
+        }
+
+        this.db = new Store(cachePath, 512);
     }
 
     public static async create (baseUrl: string, options: { 
