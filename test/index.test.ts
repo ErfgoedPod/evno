@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals';
-import { parseNotification } from '../src';
+import EventNotification from '../src/notification';
 import * as fs from 'fs'
 import { join } from "path";
 import { JsonLdParser } from "jsonld-streaming-parser";
@@ -16,7 +16,7 @@ describe('parseNotification', () => {
 
         const myTextStream = getAssetStream('./assets/notification.jsonld');
 
-        const notification = await parseNotification(myTextStream, myParser);
+        const notification = await EventNotification.parse(myTextStream, myParser);
 
         expect(notification).toHaveProperty('id', "https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
     });
