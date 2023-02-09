@@ -18,6 +18,6 @@ describe('parseNotification', () => {
 
         const notification = await EventNotification.parse(myTextStream, myParser);
 
-        expect(notification).toHaveProperty('id', "https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
+        expect(notification).toHaveProperty('id.id', "https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
     });
 });

@@ -11,6 +11,7 @@ import Store from 'krieven-data-file'
 import * as fs from 'fs'
 import { dirname } from 'path'
 import EventNotification from './notification'
+import {AS } from './util'
 
 export interface INotification {
     quads: Quad[],
@@ -40,6 +41,63 @@ export async function sendNotification(notification: EventNotification, inboxUrl
 }
 
 export async function accept(notification: EventNotification) {
+
+    if (!!notification.type.find((type) => type.equals(AS('Offer'))))
+        throw new Error('Can only accept Offer activities')
+
+    const response = { 
+        "@context": [ 
+          "https://www.w3.org/ns/activitystreams" ,
+          {"schema": "https://schema.org/"}
+        ], 
+        "id": "urn:uuid:9C0ED771-B7F3-4A50-8A92-72DF63215BCB",
+        "type": "Accept",
+        "actor": {
+           "id": "https://data.archive.xyz.net/",
+           "inbox": "https://data.archive.xyz.net/inbox/",
+           "name": "Data Archive XYZ",
+           "type": "Organization"
+        },
+        "origin": {
+           "id": "https://data.archive.xyz.net/system",
+           "name": "XYZ Archiving Department",
+           "type": "Application"
+        },
+        "inReplyTo" : "urn:uuid:6E5FAF88-A7F1-47A4-B087-77345EBFF495" ,
+        "context" : "http://acme.org/artifacts/alice/data-set-2022-01-19.zip" ,
+        "object": {
+            "id": "urn:uuid:6E5FAF88-A7F1-47A4-B087-77345EBFF495",
+            "type": "Offer",
+            "actor": {
+               "id": "https://acme.org/profile/card#us",
+               "inbox": "https://acme.org/inbox/",
+               "name": "ACME Research Institute",
+               "type": "Organization"
+            },
+            "origin": {
+               "id": "https://acme.org/system",
+               "name": "ACME Research Institute System",
+               "type": "Application"
+            },
+            "object": {
+               "id": "http://acme.org/artifacts/alice/data-set-2022-01-19.zip",
+               "type": [ "Document" , "schema:Dataset" ]
+            },
+            "target": {     
+               "id": "https://data.archive.xyz.net/",
+               "inbox": "https://data.archive.xyz.net/inbox/",
+               "name": "Data Archive XYZ",
+               "type": "Organization"
+            }
+        },
+        "target": {     
+           "id": "https://acme.org/profile/card#us",
+           "inbox": "https://acme.org/inbox/",
+           "name": "ACME Research Institute",
+           "type": "Organization"
+        }
+      }
+
 
 
 }
