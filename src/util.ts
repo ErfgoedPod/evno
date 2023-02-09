@@ -2,6 +2,7 @@
 import { DataFactory, Store, Quad, NamedNode, Term } from 'n3'
 const { namedNode, literal, defaultGraph, quad } = DataFactory
 
+const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
 const AS_NS = 'https://www.w3.org/ns/activitystreams#'
 export const AS_types = [
     'Create',
