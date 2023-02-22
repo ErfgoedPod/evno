@@ -19,22 +19,23 @@ program
   .requiredOption("-n, --name <username>", "Username")
   .requiredOption("-e, --email <email>", "Email")
   .requiredOption("-p, --password <password>", "Password")
-  .option("-i, --idp <idp>", "Identity provider", "http://localhost:3000/")
+  .option("-i, --idp <idp>", "Identity provider", "http://localhost:3001/")
 
 program.command('watch')
   .description("Watch an inbox for new notifications")
-  .argument("<baseUrl>", 'Base URL of the Solid pod')
-  .argument("<inboxUrl>", 'Base URL of the Solid pod')
+  .argument("<inboxUrl>", 'Inbox URL to watch')
   .option("-c, --cache  [value]", "Path to cache database", "~/.cache/cache.dsb")
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
   .option("-, --stdout", "Pipe output to stdout", false)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
-  .action(async (baseUrl, inboxUrl, options) => {
+  .action(async (inboxUrl, options) => {
+    const gOptions = program.opts()
+    const receiver = await Receiver.create({
+      name: gOptions.name, email: gOptions.email, password: gOptions.password, idp: gOptions.idp
+    });
 
-    const receiver = await Receiver.create(baseUrl, options);
-
-    (!options.stdout) && console.log('Logging in as %s', options.name)
+    (!options.stdout) && console.log('Logged in as \'%s\' with id %s', gOptions.name, receiver.webId)
 
     receiver.start(inboxUrl, options.strategy)
     receiver.on('notification', async (n: EventNotification) => {
@@ -48,7 +49,7 @@ program.command('init')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
     const gOptions = program.opts()
-    const watcher = await Receiver.create(baseUrl, {
+    const watcher = await Receiver.create({
       name: gOptions.name, email: gOptions.email, password: gOptions.password, idp: gOptions.idp
     });
 

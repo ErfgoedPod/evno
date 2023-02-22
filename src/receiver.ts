@@ -13,7 +13,7 @@ import EventNotification from './notification.js'
 
 export default class Receiver extends EventEmitter {
 
-    private webId: string | undefined
+    private _webId?: string
     private fetch: undefined | typeof fetch
     private freq: number = 1000;
     private stopPolling = false;
@@ -24,7 +24,7 @@ export default class Receiver extends EventEmitter {
         super()
 
         this.fetch = session.fetch
-        this.webId = session.webId
+        this._webId = session.webId
 
         if (options.cache) {
             const cachePath = options.cachePath || './.cache/cache.dsb'
@@ -38,7 +38,11 @@ export default class Receiver extends EventEmitter {
         }
     }
 
-    public static async create(baseUrl: string, options: {
+    public get webId() {
+        return this._webId
+    }
+
+    public static async create(options: {
         name: string,
         email: string,
         password: string,
@@ -47,7 +51,7 @@ export default class Receiver extends EventEmitter {
         cachePath?: string,
     }) {
         let token = await generateCSSToken(options)
-        const session = await authenticateToken(token, baseUrl)
+        const session = await authenticateToken(token, options.idp)
 
         return new Receiver(session)
     }
