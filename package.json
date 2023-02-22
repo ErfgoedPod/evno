@@ -73,7 +73,6 @@
     "jsonld-streaming-parser": "^3.0.1",
     "krieven-data-file": "^1.0.0",
     "n3": "^1.16.3",
-    "node-disk-storage": "^0.0.6",
     "poll": "^3.2.1",
     "readable-web-to-node-stream": "^3.0.2",
     "solid-bashlib": "0.2.3",

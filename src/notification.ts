@@ -77,9 +77,9 @@ export default class EventNotification implements IEventNotification {
         })
     }
 
-    serialize(): Promise<string> {
+    public serialize(): Promise<string> {
         // serialize to JSON-LD
-        const context: Context = { "@vocab": "https://www.w3.org/ns/activitystreams" }
+        const context: Context = { "@context": "https://www.w3.org/ns/activitystreams" }
 
         const serializerJsonld = new SerializerJsonld({ context, compact: true, encoding: 'string' })
 
@@ -96,6 +96,10 @@ export default class EventNotification implements IEventNotification {
                 resolve(result)
             })
         })
+    }
+
+    public isType(type: NamedNode) {
+        return !!this.type.find((t) => t.equals(type))
     }
 
     private getAgentByPredicate(predicate: NamedNode) {
@@ -147,9 +151,5 @@ export default class EventNotification implements IEventNotification {
     get inReplyTo(): NamedNode | undefined {
         const arr = this.store.getObjects(this.activity_id, AS('inReplyTo'), null)
         return !arr.length ? undefined : arr[0] as NamedNode
-    }
-
-    public isType(type: NamedNode) {
-        return !!this.type.find((t) => t.equals(type))
     }
 }

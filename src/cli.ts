@@ -2,7 +2,8 @@
 
 import { Command } from "commander"
 import figlet from "figlet"
-import { InboxWatcher, sendNotification, parseNotification, serialize } from "./index.js"
+import { InboxWatcher, sendNotification  } from "./index.js"
+import EventNotification from './notification.js'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
 
@@ -36,7 +37,7 @@ program.command('watch')
 
     watcher.start(inboxUrl, options.strategy)
     watcher.on('notification', async (n) => {
-      console.log(await serialize(n))
+      console.log(await n.serialize())
     })
   })
 
@@ -66,7 +67,7 @@ program.command('send')
     // read file and parse
     const myParser = new JsonLdParser()
     const myTextStream = fs.createReadStream(path)
-    const notification = await parseNotification(myTextStream, myParser)
+    const notification = await EventNotification.parse(myTextStream, myParser)
 
     const { success, location } = await sendNotification(notification, inboxUrl, program.opts())
     if (success) {
