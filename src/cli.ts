@@ -1,10 +1,10 @@
-#! /usr/bin/env node
+#! /usr/bin/env node --experimental-specifier-resolution=node
 
 import { Command } from "commander"
 import figlet from "figlet"
-import Receiver from "./receiver.js"
-import Sender from "./sender.js"
-import EventNotification from './notification.js'
+import Receiver from "./receiver"
+import Sender from "./sender"
+import EventNotification from './notification'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
 

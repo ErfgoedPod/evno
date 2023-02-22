@@ -9,7 +9,7 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import Store from 'krieven-data-file'
 import * as fs from 'fs'
 import { dirname } from 'path'
-import EventNotification from './notification.js'
+import EventNotification from './notification'
 
 export default class Receiver extends EventEmitter {
 

@@ -1,5 +1,5 @@
-import EventNotification, { IEventAgent } from './notification.js'
-import { AS } from './util.js'
+import EventNotification, { IEventAgent } from './notification'
+import { AS } from './util'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { NamedNode } from 'n3'
