@@ -2,7 +2,8 @@
 
 import { Command } from "commander"
 import figlet from "figlet"
-import { InboxWatcher, sendNotification  } from "./index.js"
+import Receiver from "./receiver.js"
+import Sender from "./sender.js"
 import EventNotification from './notification.js'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
@@ -31,12 +32,12 @@ program.command('watch')
   // @ts-ignore
   .action(async (baseUrl, inboxUrl, options) => {
 
-    const watcher = await InboxWatcher.create(baseUrl, options);
+    const receiver = await Receiver.create(baseUrl, options);
 
     (!options.stdout) && console.log('Logging in as %s', options.name)
 
-    watcher.start(inboxUrl, options.strategy)
-    watcher.on('notification', async (n) => {
+    receiver.start(inboxUrl, options.strategy)
+    receiver.on('notification', async (n: EventNotification) => {
       console.log(await n.serialize())
     })
   })
@@ -47,7 +48,7 @@ program.command('init')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
     const gOptions = program.opts()
-    const watcher = await InboxWatcher.create(baseUrl, {
+    const watcher = await Receiver.create(baseUrl, {
       name: gOptions.name, email: gOptions.email, password: gOptions.password, idp: gOptions.idp
     });
 
@@ -69,7 +70,8 @@ program.command('send')
     const myTextStream = fs.createReadStream(path)
     const notification = await EventNotification.parse(myTextStream, myParser)
 
-    const { success, location } = await sendNotification(notification, inboxUrl, program.opts())
+    const sender = new Sender(notification.actor.id)
+    const { success, location } = await sender.send(notification, inboxUrl, program.opts())
     if (success) {
       return console.log('Notification %s delivered at %s', notification.id, location)
     }

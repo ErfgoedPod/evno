@@ -4,9 +4,9 @@ import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
 import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
-import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId } from './util.js'
+import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId } from './util'
 
-interface IEventNotification {
+export interface IEventNotification {
     id: NamedNode,
     type: NamedNode[]
     actor: IEventAgent,
@@ -17,13 +17,13 @@ interface IEventNotification {
     context?: any
 }
 
-interface IEventObject {
+export interface IEventObject {
     id: NamedNode,
     type: NamedNode[],
     [key: string]: any
 }
 
-interface IEventAgent {
+export interface IEventAgent {
     id: NamedNode,
     inbox?: NamedNode,
     name?: String,

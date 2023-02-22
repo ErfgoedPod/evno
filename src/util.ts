@@ -5,6 +5,7 @@ const { namedNode } = DataFactory
 const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
 const AS_NS = 'https://www.w3.org/ns/activitystreams#'
 const LDP_NS = 'http://www.w3.org/ns/ldp#'
+
 export const ACTIVITY_TYPES = [
     'Create',
     'Update',

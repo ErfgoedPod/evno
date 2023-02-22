@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { poll } from 'poll'
 import { JsonLdParser } from "jsonld-streaming-parser"
-import { list, makeDirectory, authenticateToken, generateCSSToken, changePermissions } from "solid-bashlib"
+import { list, makeDirectory, changePermissions, authenticateToken, generateCSSToken } from "solid-bashlib"
 //import { ReadableWebToNodeStream } from 'readable-web-to-node-stream'
 import { Readable } from 'readable-stream'
 import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
@@ -11,49 +11,7 @@ import * as fs from 'fs'
 import { dirname } from 'path'
 import EventNotification from './notification.js'
 
-export async function sendNotification(notification: EventNotification, inboxUrl: string, options: {
-    name: string,
-    email: string,
-    password: string,
-    idp: string,
-    authUrl?: string,
-    clientCredentialsTokenStorageLocation?: string
-}): Promise<{ success: boolean, location: string | null }> {
-
-    // login 
-    const authFetch = (await login(options.authUrl || options.idp || inboxUrl, options)).fetch
-
-    const result = await notification.serialize()
-    const response = await authFetch(inboxUrl, {
-        method: "POST",
-        body: result,
-        headers: { "content-type": "application/ld+json" }
-    })
-
-    return { success: response.ok, location: response.headers.get('location') }
-}
-
-async function login(baseUrl: string, options: {
-    name: string,
-    email: string,
-    password: string,
-    idp: string,
-    clientCredentialsTokenStorageLocation?: string
-}
-): Promise<SessionInfo> {
-    /**
-     *  Create authenticated fetch
-     */
-
-    let token = await generateCSSToken(options)
-    let { fetch, webId } = await authenticateToken(token, baseUrl)
-
-    //console.log(`Logged in as ${webId}`)
-
-    return { fetch, webId }
-}
-
-export class InboxWatcher extends EventEmitter {
+export default class Receiver extends EventEmitter {
 
     private webId: string | undefined
     private fetch: undefined | typeof fetch
@@ -88,9 +46,10 @@ export class InboxWatcher extends EventEmitter {
         clientCredentialsTokenStorageLocation?: string,
         cachePath?: string,
     }) {
-        const session = await login(baseUrl, options)
+        let token = await generateCSSToken(options)
+        const session = await authenticateToken(token, baseUrl)
 
-        return new InboxWatcher(session)
+        return new Receiver(session)
     }
 
     public async init(baseUrl: string, inboxPath: string = 'inbox/'): Promise<string> {
