@@ -76,6 +76,7 @@
     "node-disk-storage": "^0.0.6",
     "poll": "^3.2.1",
     "readable-web-to-node-stream": "^3.0.2",
-    "solid-bashlib": "0.2.3"
+    "solid-bashlib": "0.2.3",
+    "uuid": "^9.0.0"
   }
 }

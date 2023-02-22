@@ -1,10 +1,11 @@
-
-import { DataFactory, Store, Quad, NamedNode, Term } from 'n3'
-const { namedNode, literal, defaultGraph, quad } = DataFactory
+import { v4 as uuidv4 } from 'uuid'
+import { DataFactory, NamedNode, Term } from 'n3'
+const { namedNode } = DataFactory
 
 const RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
 const AS_NS = 'https://www.w3.org/ns/activitystreams#'
-export const AS_types = [
+const LDP_NS = 'http://www.w3.org/ns/ldp#'
+export const ACTIVITY_TYPES = [
     'Create',
     'Update',
     'Remove',
@@ -13,12 +14,30 @@ export const AS_types = [
     'Accept',
     'Reject'].map(AS)
 
+export const AGENT_TYPES = [
+    'Person',
+    'Organization',
+    'Application', 'Group', 'Service'
+].map(AS)
+
 export function isNamedNode(term: Term): term is NamedNode {
     return (term as NamedNode) !== undefined
 }
 
-export function isAllowedType(term: Term): boolean {
-    return isNamedNode(term) && !!AS_types.find((type) => type.equals(term))
+export function isAllowedActivityType(term: Term): boolean {
+    return isNamedNode(term) && !!ACTIVITY_TYPES.find((type) => type.equals(term))
+}
+
+export function isAllowedAgentType(term: Term): boolean {
+    return isNamedNode(term) && !!AGENT_TYPES.find((type) => type.equals(term))
+}
+
+export function isString(data: any): data is string {
+    return typeof data === 'string'
+};
+
+export function getId(): NamedNode {
+    return namedNode(`urn:uuid:${uuidv4()}`)
 }
 
 export function AS(value: string): NamedNode {
@@ -27,5 +46,11 @@ export function AS(value: string): NamedNode {
 
 export function RDF(value: string): NamedNode {
     return namedNode(RDF_NS + value)
-} 
+}
+
+export function LDP(value: string): NamedNode {
+    return namedNode(LDP_NS + value)
+}
+
+
 

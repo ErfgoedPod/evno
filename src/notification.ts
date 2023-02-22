@@ -1,12 +1,36 @@
 import { EventEmitter } from 'events'
 import { JsonLdParser } from "jsonld-streaming-parser"
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
-import { Store, Quad, NamedNode, Term } from 'n3'
+import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
+const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
-import { RDF, isAllowedType } from './util'
+import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId } from './util'
 
+interface IEventNotification {
+    id: NamedNode,
+    type: NamedNode[]
+    actor: IEventAgent,
+    target?: IEventAgent,
+    origin?: IEventAgent,
+    object: IEventObject,
+    inReplyTo?: NamedNode,
+    context?: any
+}
 
-export default class EventNotification {
+interface IEventObject {
+    id: NamedNode,
+    type: NamedNode[],
+    [key: string]: any
+}
+
+interface IEventAgent {
+    id: NamedNode,
+    inbox?: NamedNode,
+    name?: String,
+    type?: NamedNode[]
+}
+
+export default class EventNotification implements IEventNotification {
     private store: Store = new Store();
     private activity_id: NamedNode
 
@@ -16,7 +40,7 @@ export default class EventNotification {
         // Get ID when undefined
         let activity_id
         for (const quad of this.store.match(null, RDF('type'), null, null)) {
-            if (isAllowedType(quad.object as Term)) {
+            if (isAllowedActivityType(quad.object as Term)) {
                 activity_id = quad.subject as NamedNode
                 break
             }
@@ -26,15 +50,30 @@ export default class EventNotification {
         this.activity_id = activity_id
     }
 
+    static create(type: NamedNode, actor: NamedNode, object: NamedNode, target?: NamedNode, origin?: NamedNode, id?: NamedNode): EventNotification {
+        const activity_id = id || getId()
+
+        const quads = [
+            quad(activity_id, RDF('type'), type),
+            quad(activity_id, AS('actor'), actor),
+            quad(activity_id, AS('object'), object)
+        ]
+
+        target && quads.push(quad(activity_id, AS('target'), target))
+        origin && quads.push(quad(activity_id, AS('origin'), origin))
+
+        return new EventNotification(quads)
+    }
+
     static parse(stream: EventEmitter, jsonldParser: JsonLdParser): Promise<EventNotification> {
         return new Promise((resolve, reject) => {
             const quads: Quad[] = []
-            
+
             jsonldParser
                 .import(stream)
                 .on('data', (q) => quads.push(q))
                 .on('error', (e: Error) => reject(e))
-                .on('end', () => {resolve(new EventNotification(quads))})
+                .on('end', () => { resolve(new EventNotification(quads)) })
         })
     }
 
@@ -59,15 +98,58 @@ export default class EventNotification {
         })
     }
 
+    private getAgentByPredicate(predicate: NamedNode) {
+        const agent_id = this.store.getObjects(this.activity_id, predicate, null)[0]
+
+        const inboxArr = this.store.getObjects(agent_id, LDP('inbox'), null)
+        const nameArr = this.store.getObjects(agent_id, AS('name'), null)
+
+        return {
+            id: agent_id as NamedNode,
+            inbox: !inboxArr.length ? undefined : inboxArr[0] as NamedNode,
+            name: !nameArr.length ? undefined : nameArr[0].value,
+            type: this.store.getObjects(agent_id, RDF('type'), null).filter(isAllowedAgentType) as NamedNode[]
+        }
+    }
+
     get type(): NamedNode[] {
         const objects = this.store
             .getObjects(this.activity_id, RDF('type'), null)
-            .filter(isAllowedType)
+            .filter(isAllowedActivityType)
 
         return objects as NamedNode[]
     }
 
     get id(): NamedNode {
         return this.activity_id
+    }
+
+    get actor(): IEventAgent {
+        return this.getAgentByPredicate(AS('actor'))
+    }
+
+    get target(): IEventAgent {
+        return this.getAgentByPredicate(AS('target'))
+    }
+
+    get origin(): IEventAgent {
+        return this.getAgentByPredicate(AS('origin'))
+    }
+
+    get object(): IEventObject {
+        const object_id = this.store.getObjects(this.activity_id, AS('object'), null)[0]
+        return {
+            id: object_id as NamedNode,
+            type: this.store.getObjects(object_id, RDF('type'), null).filter(isAllowedAgentType) as NamedNode[]
+        }
+    }
+
+    get inReplyTo(): NamedNode | undefined {
+        const arr = this.store.getObjects(this.activity_id, AS('inReplyTo'), null)
+        return !arr.length ? undefined : arr[0] as NamedNode
+    }
+
+    public isType(type: NamedNode) {
+        return !!this.type.find((t) => t.equals(type))
     }
 }
