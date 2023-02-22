@@ -1,4 +1,4 @@
-import EventNotification from './notification.js'
+import EventNotification, { IEventAgent } from './notification.js'
 import { AS } from './util.js'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
@@ -16,10 +16,10 @@ export interface IAuthOptions {
 
 export default class Sender {
 
-    private webid: NamedNode
+    private actor: IEventAgent
 
-    constructor(webid: NamedNode) {
-        this.webid = webid
+    constructor(actor: IEventAgent) {
+        this.actor = actor
     }
 
     public async send(notification: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
@@ -52,23 +52,57 @@ export default class Sender {
 
     public announce(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
 
-        const notification = EventNotification.create(
-            AS('Announce'),
-            this.webid,
-            object
-        )
+        const notification = EventNotification.create({
+            type: AS('Announce'),
+            actor: this.actor,
+            object: { id: object, type: [AS('Object')] }
+        })
 
         return this.send(notification, inboxUrl, options)
     }
 
     public offer(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
-        const notification = EventNotification.create(
-            AS('Offer'),
-            this.webid,
-            object
-        )
+        const notification = EventNotification.create({
+            type: AS('Offer'),
+            actor: this.actor,
+            object: { id: object, type: [AS('Object')] }
+        })
 
         return this.send(notification, inboxUrl, options)
+    }
+
+    public accept(offer: EventNotification, inboxUrl: string, options: IAuthOptions) {
+        if (!offer.isType(AS('Offer'))) {
+            throw new Error('Acitvity is not of type Offer and cannot be accepted.')
+        }
+
+        const notification = EventNotification.create({
+            type: AS('Accept'),
+            actor: this.actor,
+            object: offer,
+            target: offer.actor,
+            inReplyTo: offer.id,
+            context: offer.object.id
+        })
+
+        return this.send(notification,offer.actor.inbox?.id || inboxUrl, options)
+    }
+
+    public reject(offer: EventNotification, inboxUrl: string, options: IAuthOptions) {
+        if (!offer.isType(AS('Offer'))) {
+            throw new Error('Acitvity is not of type Offer and cannot be rejected.')
+        }
+
+        const notification = EventNotification.create({
+            type: AS('Reject'),
+            actor: this.actor,
+            object: offer,
+            target: offer.actor,
+            inReplyTo: offer.id,
+            context: offer.object.id
+        })
+
+        return this.send(notification,offer.actor.inbox?.id || inboxUrl, options)
     }
 
 

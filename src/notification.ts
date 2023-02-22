@@ -14,7 +14,7 @@ export interface IEventNotification {
     origin?: IEventAgent,
     object: IEventObject,
     inReplyTo?: NamedNode,
-    context?: any
+    context?: NamedNode
 }
 
 export interface IEventObject {
@@ -50,17 +50,19 @@ export default class EventNotification implements IEventNotification {
         this.activity_id = activity_id
     }
 
-    static create(type: NamedNode, actor: NamedNode, object: NamedNode, target?: NamedNode, origin?: NamedNode, id?: NamedNode): EventNotification {
-        const activity_id = id || getId()
+    static create(options: {type: NamedNode, actor: IEventAgent, object: IEventObject, target?: IEventAgent, origin?: IEventAgent, inReplyTo?:NamedNode, context?: NamedNode, id?: NamedNode}): EventNotification {
+        const activity_id = options.id || getId()
 
         const quads = [
-            quad(activity_id, RDF('type'), type),
-            quad(activity_id, AS('actor'), actor),
-            quad(activity_id, AS('object'), object)
+            quad(activity_id, RDF('type'), options.type),
+            quad(activity_id, AS('actor'), options.actor.id),
+            quad(activity_id, AS('object'), options.object.id)
         ]
 
-        target && quads.push(quad(activity_id, AS('target'), target))
-        origin && quads.push(quad(activity_id, AS('origin'), origin))
+        options.target && quads.push(quad(activity_id, AS('target'), options.target.id))
+        options.origin && quads.push(quad(activity_id, AS('origin'), options.origin.id))
+        options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
+        options.context && quads.push(quad(activity_id, AS('inReplyTo'), options.context))
 
         return new EventNotification(quads)
     }

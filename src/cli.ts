@@ -71,7 +71,7 @@ program.command('send')
     const myTextStream = fs.createReadStream(path)
     const notification = await EventNotification.parse(myTextStream, myParser)
 
-    const sender = new Sender(notification.actor.id)
+    const sender = new Sender(notification.actor)
     const { success, location } = await sender.send(notification, inboxUrl, program.opts())
     if (success) {
       return console.log('Notification %s delivered at %s', notification.id, location)
