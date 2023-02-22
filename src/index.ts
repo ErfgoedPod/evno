@@ -9,7 +9,7 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import Store from 'krieven-data-file'
 import * as fs from 'fs'
 import { dirname } from 'path'
-import EventNotification from './notification'
+import EventNotification from './notification.js'
 
 export async function sendNotification(notification: EventNotification, inboxUrl: string, options: {
     name: string,
