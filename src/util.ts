@@ -21,7 +21,7 @@ export const AGENT_TYPES = [
     'Application', 'Group', 'Service'
 ].map(AS)
 
-export function isNamedNode(term: Term): term is NamedNode {
+export function isNamedNode(term: any): term is NamedNode {
     return (term as NamedNode) !== undefined
 }
 

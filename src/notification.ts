@@ -4,7 +4,7 @@ import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
 import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
-import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId } from './util'
+import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util'
 
 export interface IEventNotification {
     id: NamedNode,
@@ -50,17 +50,17 @@ export default class EventNotification implements IEventNotification {
         this.activity_id = activity_id
     }
 
-    static create(options: {type: NamedNode, actor: IEventAgent, object: IEventObject, target?: IEventAgent, origin?: IEventAgent, inReplyTo?:NamedNode, context?: NamedNode, id?: NamedNode}): EventNotification {
+    static create(options: {type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?:NamedNode, context?: NamedNode, id?: NamedNode}): EventNotification {
         const activity_id = options.id || getId()
 
         const quads = [
             quad(activity_id, RDF('type'), options.type),
-            quad(activity_id, AS('actor'), options.actor.id),
+            quad(activity_id, AS('actor'), isNamedNode(options.actor) ? options.actor : options.actor.id),
             quad(activity_id, AS('object'), options.object.id)
         ]
 
-        options.target && quads.push(quad(activity_id, AS('target'), options.target.id))
-        options.origin && quads.push(quad(activity_id, AS('origin'), options.origin.id))
+        options.target && quads.push(quad(activity_id, AS('target'), isNamedNode(options.target) ? options.target : options.target.id))
+        options.origin && quads.push(quad(activity_id, AS('origin'), isNamedNode(options.origin) ? options.origin : options.origin.id))
         options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
         options.context && quads.push(quad(activity_id, AS('inReplyTo'), options.context))
 
