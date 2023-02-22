@@ -11,7 +11,6 @@ export interface IAuthOptions {
     email: string,
     password: string,
     idp: string,
-    authUrl?: string,
     clientCredentialsTokenStorageLocation?: string
 }
 
@@ -26,7 +25,7 @@ export default class Sender {
     public async send(notification: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
 
         // log into inbox
-        const authFetch = (await this.login(options.authUrl || options.idp || inboxUrl, options)).fetch
+        const authFetch = (await this.login(options)).fetch
 
         const result = await notification.serialize()
         const response = await authFetch(inboxUrl, {
@@ -38,13 +37,13 @@ export default class Sender {
         return { success: response.ok, location: response.headers.get('location') }
     }
 
-    private async login(baseUrl: string, options: IAuthOptions): Promise<SessionInfo> {
+    private async login(options: IAuthOptions): Promise<SessionInfo> {
         /**
          *  Create authenticated fetch
          */
 
         let token = await generateCSSToken(options)
-        let { fetch, webId } = await authenticateToken(token, baseUrl)
+        let { fetch, webId } = await authenticateToken(token, options.idp)
 
         //console.log(`Logged in as ${webId}`)
 
