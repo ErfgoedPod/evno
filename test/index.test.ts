@@ -182,8 +182,34 @@ describe('EventNotification', () => {
             namedNode("https://orcid.org/0000-0007-01219-312200")
         )
 
-        it('must be of type as:Offer', () => {
+        it('must be of type as:Accept', () => {
             expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Accept"))
+        })
+
+        it('must have context', () => {
+            expect(notification).toHaveProperty('context')
+            expect(notification.context).toBeDefined()
+            expect(notification.context).toEqualRdfTerm(namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"))
+        })
+
+        it('must have inReplyTo', () => {
+            expect(notification).toHaveProperty('inReplyTo', offer.id)
+        })
+    })
+
+    describe('reject()', () => {
+        const offer = EventNotification.offer(
+            namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"),
+            namedNode("https://orcid.org/0000-0007-01219-312199")
+        )
+
+        const notification = EventNotification.reject(
+            offer,
+            namedNode("https://orcid.org/0000-0007-01219-312200")
+        )
+
+        it('must be of type as:Reject', () => {
+            expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Reject"))
         })
 
         it('must have context', () => {
