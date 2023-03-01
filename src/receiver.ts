@@ -6,7 +6,7 @@ import { list, makeDirectory, changePermissions, authenticateToken, generateCSST
 import { Readable } from 'readable-stream'
 import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
-import Store from 'krieven-data-file'
+import {ICachedStorage, factory} from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
 import EventNotification from './notification'
@@ -18,23 +18,31 @@ export default class Receiver extends EventEmitter {
     private freq: number = 1000;
     private stopPolling = false;
 
-    private db?: Store<boolean>
+    private db: ICachedStorage;
 
-    private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string, inboxPath?: string } = {}) {
+    private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string } = {}) {
         super()
 
         this.fetch = session.fetch
         this._webId = session.webId
 
         if (options.cache) {
-            const cachePath = options.cachePath || './.cache/cache.dsb'
+            const cachePath = options.cachePath || './.cache/cache.db'
             const cacheDir = dirname(cachePath)
 
             if (!fs.existsSync(cacheDir)) {
                 fs.mkdirSync(cacheDir, { recursive: true })
             }
 
-            this.db = new Store(cachePath, 512)
+            if (!fs.existsSync(cachePath)) {
+                fs.writeFileSync(cachePath, '{}')
+            }
+
+            console.log(`Using cache at: ${cachePath}`)
+            this.db = factory({path: cachePath})
+        } else {
+            console.log(`Using in memory cache`)
+            this.db = factory()
         }
     }
 
@@ -48,12 +56,13 @@ export default class Receiver extends EventEmitter {
         password: string,
         idp: string,
         clientCredentialsTokenStorageLocation?: string,
+        cache?: boolean,
         cachePath?: string,
     }) {
         let token = await generateCSSToken(options)
         const session = await authenticateToken(token, options.idp)
 
-        return new Receiver(session)
+        return new Receiver(session, { cache: !!options.cache, cachePath: options.cachePath })
     }
 
     public async init(baseUrl: string, inboxPath: string = 'inbox/'): Promise<string> {
@@ -63,20 +72,22 @@ export default class Receiver extends EventEmitter {
         }
 
         const containers = await list(baseUrl, fetchOptions)
-
         const inboxUrl = baseUrl + inboxPath
 
         if (!containers.find(el => el.url == inboxUrl)) {
             try {
+                console.log(`Creating container at: ${inboxUrl}`)
                 await makeDirectory(inboxUrl, fetchOptions)
-
             }
             catch (e) {
                 throw e
             }
+        } else {
+            console.log(`Container ${inboxUrl} already exists.`)
         }
 
         const permission: PermissionOperation = { type: 'agent', append: true, read: true, id: this.webId }
+        console.log(`Setting read and append permissions on container ${inboxUrl}`)
         await changePermissions(inboxUrl, [permission], fetchOptions)
         return inboxUrl
     }
@@ -85,7 +96,7 @@ export default class Receiver extends EventEmitter {
         this.stopPolling = true
     }
 
-    public start(inboxUrl: string, strategy: string = 'activity') {
+    public start(inboxUrl: string, strategy: string = 'activity_id') {
 
         const fetchOptions = {
             fetch: this.fetch,         // an (authenticated) fetch function
@@ -102,27 +113,32 @@ export default class Receiver extends EventEmitter {
                     const response: Response = await this.fetch(item.url)
 
                     // parse the notification
-                    const jsonldParser = JsonLdParser.fromHttpResponse(
-                        response.url,
-                        response.headers.get('content-type') || "application/ld+json"
-                    )
+                    try {
+                        const jsonldParser = JsonLdParser.fromHttpResponse(
+                            response.url,
+                            response.headers.get('content-type') || "application/ld+json"
+                        )
 
-                    // transform bodystream
-                    //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+                        // transform bodystream
+                        //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
 
-                    // TODO: Fix this when NodeJS vs. Stream API chaos is over
-                    const bodyStream = new Readable()
-                    bodyStream.push(await response.text())
-                    bodyStream.push(null)
+                        // TODO: Fix this when NodeJS vs. Stream API chaos is over
+                        const bodyStream = new Readable()
+                        bodyStream.push(await response.text())
+                        bodyStream.push(null)
 
-                    // parse the notification
-                    const notification = await EventNotification.parse(bodyStream, jsonldParser)
+                        // parse the notification
+                        const notification = await EventNotification.parse(bodyStream, jsonldParser)
 
-                    // emit an event with notification
-                    const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
-                    if (this.db && !this.db.get(idToCheck)) {
-                        this.emit('notification', notification)
-                        this.db.put(idToCheck, true)
+                        // emit an event with notification
+                        const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
+
+                        if (this.db && !this.db.get(idToCheck)) {
+                            this.emit('notification', notification)
+                            this.db.set(idToCheck, true)
+                        }
+                    } catch (e) {
+                        this.emit('error', e)
                     }
                 }
             }

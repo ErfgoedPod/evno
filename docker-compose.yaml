@@ -12,7 +12,11 @@ services:
     build: https://github.com/CommunitySolidServer/CommunitySolidServer.git#main
 
     ports:
-      - "3000:3000"
+      - "3001:3001"
+
+    environment:
+      - CSS_LOGGING_LEVEL=debug
+      - CSS_PORT=3001
 
     volumes:
       # ---- Format: ----
