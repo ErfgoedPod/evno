@@ -6,17 +6,6 @@ const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
 import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util'
 
-export interface IEventNotification {
-    id: NamedNode,
-    type: NamedNode[]
-    actor: IEventAgent,
-    target?: IEventAgent,
-    origin?: IEventAgent,
-    object: IEventObject,
-    inReplyTo?: NamedNode,
-    context?: NamedNode
-}
-
 export interface IEventObject {
     id: NamedNode,
     type: NamedNode[],
@@ -28,6 +17,15 @@ export interface IEventAgent {
     inbox?: NamedNode,
     name?: String,
     type?: NamedNode[]
+}
+
+export interface IEventNotification extends IEventObject {
+    actor: IEventAgent,
+    target?: IEventAgent,
+    origin?: IEventAgent,
+    object: IEventObject,
+    inReplyTo?: NamedNode,
+    context?: NamedNode
 }
 
 export default class EventNotification implements IEventNotification {
@@ -50,7 +48,7 @@ export default class EventNotification implements IEventNotification {
         this.activity_id = activity_id
     }
 
-    static create(options: {type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?:NamedNode, context?: NamedNode, id?: NamedNode}): EventNotification {
+    static build(options: { type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?: NamedNode, context?: NamedNode, id?: NamedNode }): EventNotification {
         const activity_id = options.id || getId()
 
         const quads = [
@@ -58,13 +56,102 @@ export default class EventNotification implements IEventNotification {
             quad(activity_id, AS('actor'), isNamedNode(options.actor) ? options.actor : options.actor.id),
             quad(activity_id, AS('object'), options.object.id)
         ]
-
+        
         options.target && quads.push(quad(activity_id, AS('target'), isNamedNode(options.target) ? options.target : options.target.id))
         options.origin && quads.push(quad(activity_id, AS('origin'), isNamedNode(options.origin) ? options.origin : options.origin.id))
         options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
-        options.context && quads.push(quad(activity_id, AS('inReplyTo'), options.context))
+        options.context && quads.push(quad(activity_id, AS('context'), options.context))
 
         return new EventNotification(quads)
+    }
+
+    static announce(object: NamedNode, actor: NamedNode | IEventAgent, context?: NamedNode | EventNotification): EventNotification {
+
+        return EventNotification.build({
+            type: AS('Announce'),
+            actor: actor,
+            object: { id: object, type: [AS('Object')] },
+            ...(isNamedNode(context) && { context: context }),
+            ...((context instanceof EventNotification) && { inReplyTo: context.id, context: context.object.id }),
+        })
+    }
+
+    static create(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+
+        return EventNotification.build({
+            type: AS('Create'),
+            actor: actor,
+            object: { id: object, type: [AS('Object')] }
+        })
+    }
+
+    static remove(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+
+        return EventNotification.build({
+            type: AS('Remove'),
+            actor: actor,
+            object: { id: object, type: [AS('Object')] }
+        })
+    }
+
+    static update(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+
+        return EventNotification.build({
+            type: AS('Update'),
+            actor: actor,
+            object: { id: object, type: [AS('Object')] }
+        })
+    }
+
+    static offer(object: NamedNode, actor: NamedNode | IEventAgent): EventNotification {
+        return EventNotification.build({
+            type: AS('Offer'),
+            actor: actor,
+            object: { id: object, type: [AS('Object')] }
+        })
+    }
+
+    static accept(offer: EventNotification, actor?: NamedNode | IEventAgent): EventNotification {
+        if (!offer.isType(AS('Offer'))) {
+            throw new Error('Acitvity is not of type as:Offer and cannot be accepted.')
+        }
+
+        return EventNotification.build({
+            type: AS('Accept'),
+            actor: actor || offer.target,
+            object: offer,
+            target: offer.actor,
+            inReplyTo: offer.id,
+            context: offer.object.id
+        })
+    }
+
+    static reject(offer: EventNotification, actor?: NamedNode | IEventAgent): EventNotification {
+        if (!offer.isType(AS('Offer'))) {
+            throw new Error('Acitvity is not of type as:Offer and cannot be rejected.')
+        }
+
+        return EventNotification.build({
+            type: AS('Reject'),
+            actor: actor || offer.target,
+            object: offer,
+            target: offer.actor,
+            inReplyTo: offer.id,
+            context: offer.object.id
+        })
+    }
+
+    static undo(object: EventNotification, actor?: NamedNode | IEventAgent): EventNotification {
+        if (!object.isType(AS('Offer')) || object.isType(AS('Accept')) || object.isType(AS('Reject')) || object.isType(AS('Announce'))) {
+            throw new Error('Activity is not of type as:Offer, as:Accept, as:Reject, or as:Announce and cannot be undone.')
+        }
+
+        return EventNotification.build({
+            type: AS('Undo'),
+            actor: actor || object.actor,
+            object: object,
+            context: object.object.id
+        })
     }
 
     static parse(stream: EventEmitter, jsonldParser: JsonLdParser): Promise<EventNotification> {
@@ -152,6 +239,11 @@ export default class EventNotification implements IEventNotification {
 
     get inReplyTo(): NamedNode | undefined {
         const arr = this.store.getObjects(this.activity_id, AS('inReplyTo'), null)
+        return !arr.length ? undefined : arr[0] as NamedNode
+    }
+
+    get context(): NamedNode | undefined {
+        const arr = this.store.getObjects(this.activity_id, AS('context'), null)
         return !arr.length ? undefined : arr[0] as NamedNode
     }
 }

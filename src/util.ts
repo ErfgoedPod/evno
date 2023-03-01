@@ -22,7 +22,7 @@ export const AGENT_TYPES = [
 ].map(AS)
 
 export function isNamedNode(term: any): term is NamedNode {
-    return (term as NamedNode) !== undefined
+    return term instanceof NamedNode
 }
 
 export function isAllowedActivityType(term: Term): boolean {

@@ -1,5 +1,4 @@
 import EventNotification, { IEventAgent } from './notification'
-import { AS } from './util'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { NamedNode } from 'n3'
@@ -14,6 +13,8 @@ export interface IAuthOptions {
     clientCredentialsTokenStorageLocation?: string
 }
 
+interface IResult { success: boolean, location: string | null }
+
 export default class Sender {
 
     private actor: IEventAgent
@@ -22,7 +23,7 @@ export default class Sender {
         this.actor = actor
     }
 
-    public async send(notification: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
+    public async send(notification: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
 
         // log into inbox
         const authFetch = (await this.login(options)).fetch
@@ -50,59 +51,44 @@ export default class Sender {
         return { fetch, webId }
     }
 
-    public announce(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
-
-        const notification = EventNotification.create({
-            type: AS('Announce'),
-            actor: this.actor,
-            object: { id: object, type: [AS('Object')] }
-        })
-
+    public announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.announce(object, this.actor, context)
         return this.send(notification, inboxUrl, options)
     }
 
-    public offer(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<{ success: boolean, location: string | null }> {
-        const notification = EventNotification.create({
-            type: AS('Offer'),
-            actor: this.actor,
-            object: { id: object, type: [AS('Object')] }
-        })
-
+    public create(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.create(object, this.actor)
         return this.send(notification, inboxUrl, options)
     }
 
-    public accept(offer: EventNotification, inboxUrl: string, options: IAuthOptions) {
-        if (!offer.isType(AS('Offer'))) {
-            throw new Error('Acitvity is not of type Offer and cannot be accepted.')
-        }
-
-        const notification = EventNotification.create({
-            type: AS('Accept'),
-            actor: this.actor,
-            object: offer,
-            target: offer.actor,
-            inReplyTo: offer.id,
-            context: offer.object.id
-        })
-
-        return this.send(notification,offer.actor.inbox?.id || inboxUrl, options)
+    public remove(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.remove(object, this.actor)
+        return this.send(notification, inboxUrl, options)
     }
 
-    public reject(offer: EventNotification, inboxUrl: string, options: IAuthOptions) {
-        if (!offer.isType(AS('Offer'))) {
-            throw new Error('Acitvity is not of type Offer and cannot be rejected.')
-        }
+    public update(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.update(object, this.actor)
+        return this.send(notification, inboxUrl, options)
+    }
 
-        const notification = EventNotification.create({
-            type: AS('Reject'),
-            actor: this.actor,
-            object: offer,
-            target: offer.actor,
-            inReplyTo: offer.id,
-            context: offer.object.id
-        })
+    public offer(object: NamedNode, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.offer(object, this.actor)
+        return this.send(notification, inboxUrl, options)
+    }
 
-        return this.send(notification,offer.actor.inbox?.id || inboxUrl, options)
+    public accept(offer: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.accept(offer, this.actor)
+        return this.send(notification, offer.actor.inbox?.id || inboxUrl, options)
+    }
+
+    public reject(offer: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.reject(offer, this.actor)
+        return this.send(notification, offer.actor.inbox?.id || inboxUrl, options)
+    }
+
+    public undo(object: EventNotification, inboxUrl: string, options: IAuthOptions): Promise<IResult> {
+        const notification = EventNotification.undo(object, this.actor)
+        return this.send(notification, inboxUrl, options)
     }
 
 

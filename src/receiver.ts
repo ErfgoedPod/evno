@@ -6,7 +6,7 @@ import { list, makeDirectory, changePermissions, authenticateToken, generateCSST
 import { Readable } from 'readable-stream'
 import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
-import {ICachedStorage, factory} from '@qiwi/primitive-storage'
+import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
 import EventNotification from './notification'
@@ -18,7 +18,7 @@ export default class Receiver extends EventEmitter {
     private freq: number = 1000;
     private stopPolling = false;
 
-    private db: ICachedStorage;
+    private db: ICachedStorage
 
     private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string } = {}) {
         super()
@@ -39,7 +39,7 @@ export default class Receiver extends EventEmitter {
             }
 
             console.log(`Using cache at: ${cachePath}`)
-            this.db = factory({path: cachePath})
+            this.db = factory({ path: cachePath })
         } else {
             console.log(`Using in memory cache`)
             this.db = factory()

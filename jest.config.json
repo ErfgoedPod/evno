@@ -1,5 +1,6 @@
 {
   "transformIgnorePatterns": [
     "node_modules/(?!poll)"
-  ]
+  ],
+  "setupFilesAfterEnv": [ "jest-rdf" ]
 }
