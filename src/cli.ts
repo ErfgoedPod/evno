@@ -23,7 +23,7 @@ program
   .option("-i, --idp <idp>", "Identity provider", "http://localhost:3001/")
   .option("-t, --tokenLocation", "Client token storage location", "./")
 
-program.command('watch')
+program.command('receive')
   .description("Watch an inbox for new notifications")
   .argument("<inboxUrl>", 'Inbox URL to watch')
   .option("-c, --cachePath  [value]", "Path to cache database", ".cache/cache.dsb")

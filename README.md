@@ -12,52 +12,92 @@ yarn link
 
 ## Usage in NodeJS
 
-### Initalizing an LDN inbox
+### Receiving event notifications from an LDN inbox
 
 ```javascript
-import { InboxWatcher } from "evno"
+import { Receiver } from "evno"
 const options = {
   name: "", email: "", password: "", idp: ""
 }
-const watcher = await InboxWatcher.create("https://localhost:3000/", options);
-const inbox = await watcher.init("https://localhost:3000/", "inbox/");
-console.log(inbox) // "https://localhost:3000/inbox/"
-```
-
-### Watching an LDN inbox
-
-```javascript
-import { InboxWatcher } from "evno"
-const options = {
-  name: "", email: "", password: "", idp: ""
-}
-const watcher = await InboxWatcher.create("https://localhost:3000/", options);
-watcher.start("https://localhost:3000/inbox","notification") // Use the notifcation strategy
-watcher.on('notification', async (n) => {
+const receiver = await Receiver.build(options);
+receiver.start("https://localhost:3000/inbox","notification_id") // Use the notifcation strategy
+receiver.on('notification', async (n) => {
   // print notification
   console.log(n)
 
   // stop the watcher
-  watcher.stop()
+  receiver.stop()
 })
 ```
 
-### Sending a nodification
+### Initalizing an LDN inbox in a Solid pod
 
 ```javascript
-import { sendNotification, parseNotification } from "evno"
+import { Receiver } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+const receiver = await Receiver.build(options);
+const inbox = await receiver.init("https://localhost:3000/", "inbox/");
+console.log(inbox) // "https://localhost:3000/inbox/"
+```
+
+### Sending an event notification
+
+#### one-way pattern
+
+```javascript
+import { Sender } from "evno"
 const options = {
   name: "", email: "", password: "", idp: ""
 }
 
-const myParser = new JsonLdParser()
-const myTextStream = fs.createReadStream(path)
+const actor = {
+  id: "http://example.org/me"
+}
 
-// parse notification object from JSONLD
-const notification = await parseNotification(myTextStream, myParser)
+const sender = Sender.build(actor, options);
 
-// send notification object
-const { success, location } = await sendNotification(notification, "https://localhost:3000/inbox", options)
+// Announce
+sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+sender.create("https://acme.org/artifacts/alice/five_steps_to_success.html")
+sender.update("https://acme.org/artifacts/alice/five_steps_to_success.html")
+sender.remove("https://acme.org/artifacts/alice/five_steps_to_success.html")
+```
+
+#### Request-response pattern
+
+```javascript
+import { Sender } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+
+const actor = {
+  id: "http://example.org/me"
+}
+
+const sender = await Sender.build(actor, options);
+
+// Announce
+await sender.offer("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+```
+
+```javascript
+import { Sender, Receiver } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+
+const actor = {
+  id: "http://example.org/me"
+}
+
+const sender = await Sender.build(actor, options);
+const receiver = await Receiver.build
+
+// Announce
+sender.offer("https://acme.org/artifacts/alice/five_steps_to_success.html") 
 ```
 
 ## Usage in command-line
@@ -74,16 +114,17 @@ Usage: evno [options] [command]
 A CLI for using Linked Data Notification in Solid Pods
 
 Options:
-  -V, --version                         output the version number
-  -n, --name <username>                 Username
-  -e, --email <email>                   Email
-  -p, --password <password>             Password
-  -i, --idp <idp>                       Identity provider (default: "http://localhost:3000/")
-  -h, --help                            display help for command
+  -V, --version                     output the version number
+  -n, --name <username>             Username
+  -e, --email <email>               Email
+  -p, --password <password>         Password
+  -i, --idp <idp>                   Identity provider (default: "http://localhost:3001/")
+  -t, --tokenLocation               Client token storage location
+  -h, --help                        display help for command
 
 Commands:
-  watch [options] <baseUrl> <inboxUrl>  Watch an inbox for new notifications
-  init <baseUrl> [inboxPath]            Initialize an inbox.
-  send [options] <inboxUrl> <path>      Send a notification to a inbox
-  help [command]                        display help for command
+  receive [options] <inboxUrl>      Watch an inbox for new notifications
+  init <baseUrl> [inboxPath]        Initialize an inbox
+  send [options] <inboxUrl> <path>  Send a notification to a inbox
+  help [command]                    display help for command
 ```

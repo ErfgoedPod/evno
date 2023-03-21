@@ -72,35 +72,35 @@ export default class Sender {
         return { fetch, webId }
     }
 
-    public announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.announce(object, this.actor, context), inboxUrl, options)
     }
 
-    public create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.create(object, this.actor), inboxUrl, options)
     }
 
-    public remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.remove(object, this.actor), inboxUrl, options)
     }
 
-    public update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.update(object, this.actor), inboxUrl, options)
     }
 
-    public offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.offer(object, this.actor), inboxUrl, options)
     }
 
-    public accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.accept(offer, this.actor), inboxUrl, options)
     }
 
-    public reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.reject(offer, this.actor), inboxUrl, options)
     }
 
-    public undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
         return this.send(EventNotification.undo(object, this.actor), inboxUrl, options)
     }
 }
