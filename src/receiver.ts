@@ -50,7 +50,7 @@ export default class Receiver extends EventEmitter {
         return this._webId
     }
 
-    public static async create(options: {
+    public static async build(options: {
         name: string,
         email: string,
         password: string,
@@ -58,7 +58,7 @@ export default class Receiver extends EventEmitter {
         clientCredentialsTokenStorageLocation?: string,
         cache?: boolean,
         cachePath?: string,
-    }) {
+    }): Promise<Receiver> {
         let token = await generateCSSToken(options)
         const session = await authenticateToken(token, options.idp)
 

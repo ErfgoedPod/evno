@@ -3,10 +3,11 @@
 import { Command } from "commander"
 import figlet from "figlet"
 import Receiver from "./receiver"
-import Sender from "./sender"
+import Sender, {IAuthOptions} from "./sender"
 import EventNotification from './notification'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
+
 
 const program = new Command()
 
@@ -33,7 +34,7 @@ program.command('watch')
   // @ts-ignore
   .action(async (inboxUrl, options) => {
     const { name, email, password, idp, clientCredentialsTokenStorageLocation } = program.opts()
-    const receiver = await Receiver.create({
+    const receiver = await Receiver.build({
       name, email, password, idp, clientCredentialsTokenStorageLocation, cache: !options.nocache, cachePath: options.cachePath
     });
 
@@ -51,7 +52,7 @@ program.command('init')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
     const { name, email, password, idp, clientCredentialsTokenStorageLocation } = program.opts()
-    const receiver = await Receiver.create({
+    const receiver = await Receiver.build({
       name, email, password, idp, clientCredentialsTokenStorageLocation
     });
 
@@ -73,8 +74,8 @@ program.command('send')
     const myTextStream = fs.createReadStream(path)
     const notification = await EventNotification.parse(myTextStream, myParser)
 
-    const sender = new Sender(notification.actor)
-    const { success, location } = await sender.send(notification, inboxUrl, program.opts())
+    const sender = await Sender.build(notification.actor, program.opts() as IAuthOptions)
+    const { success, location } = await sender.send(notification, inboxUrl)
     if (success) {
       return console.log('Notification %s delivered at %s', notification.id, location)
     }
