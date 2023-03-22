@@ -44,6 +44,21 @@ console.log(inbox) // "https://localhost:3000/inbox/"
 
 ### Sending an event notification
 
+```javascript
+import { Sender } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+
+const actor = {
+  id: "http://example.org/me"
+}
+
+const sender = Sender.build(actor, options);
+sender.send()
+```
+
+
 #### one-way pattern
 
 ```javascript
@@ -59,13 +74,15 @@ const actor = {
 const sender = Sender.build(actor, options);
 
 // Announce
-sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html") 
-sender.create("https://acme.org/artifacts/alice/five_steps_to_success.html")
-sender.update("https://acme.org/artifacts/alice/five_steps_to_success.html")
-sender.remove("https://acme.org/artifacts/alice/five_steps_to_success.html")
+await sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+await sender.create("https://acme.org/artifacts/alice/five_steps_to_success.html")
+await sender.update("https://acme.org/artifacts/alice/five_steps_to_success.html")
+await sender.remove("https://acme.org/artifacts/alice/five_steps_to_success.html")
 ```
 
 #### Request-response pattern
+
+Sending the request:
 
 ```javascript
 import { Sender } from "evno"
@@ -74,30 +91,44 @@ const options = {
 }
 
 const actor = {
-  id: "http://example.org/me"
+  id: "http://example.org/agentA"
 }
 
 const sender = await Sender.build(actor, options);
 
 // Announce
-await sender.offer("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+await sender.offer("https://acme.org/artifacts/alice/five_steps_to_success.html", "https://localhost:3000/inbox") 
 ```
+
+Sending the response:
 
 ```javascript
 import { Sender, Receiver } from "evno"
-const options = {
+
+// Authentication option for target inbox
+const optionsSender = {
+  name: "", email: "", password: "", idp: ""
+}
+
+// Authentication option for own inbox
+const optionsReceiver = {
   name: "", email: "", password: "", idp: ""
 }
 
 const actor = {
-  id: "http://example.org/me"
+  id: "http://example.org/agentB"
 }
 
-const sender = await Sender.build(actor, options);
-const receiver = await Receiver.build
+const sender = await Sender.build(actor, optionsSender);
+const receiver = await Receiver.build(optionsReceiver);
+receiver.start("https://localhost:3000/inbox","notification_id") // Use the notifcation strategy
+receiver.on('notification', async (n) => {
+  // Do something with notification
 
-// Announce
-sender.offer("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+  await sender.accept(n)
+  // OR
+  await sender.reject(n)
+})
 ```
 
 ## Usage in command-line
