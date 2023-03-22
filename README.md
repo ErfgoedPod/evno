@@ -105,12 +105,12 @@ Sending the response:
 ```javascript
 import { Sender, Receiver } from "evno"
 
-// Authentication option for target inbox
+// Authentication options for target inbox
 const optionsSender = {
   name: "", email: "", password: "", idp: ""
 }
 
-// Authentication option for own inbox
+// Authentication options for own inbox
 const optionsReceiver = {
   name: "", email: "", password: "", idp: ""
 }
