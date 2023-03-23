@@ -73,12 +73,32 @@ const actor = {
 
 const sender = Sender.build(actor, options);
 
-// Announce
+// Send an Announce
 await sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html") 
+
+// Send a Create 
 await sender.create("https://acme.org/artifacts/alice/five_steps_to_success.html")
+
+// Send an Update
 await sender.update("https://acme.org/artifacts/alice/five_steps_to_success.html")
+
+// Send a Remove
 await sender.remove("https://acme.org/artifacts/alice/five_steps_to_success.html")
 ```
+
+The previous examples assume [autodiscovery of the inbox](https://www.eventnotifications.net/#Discovery). 
+You can also supply the inbox explicitely as follows:
+
+```javascript
+await sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html", "https://example.org/inbox/") 
+
+// If the target inbox uses different credentials, you can override the default ones as well
+await sender.announce("https://acme.org/artifacts/alice/five_steps_to_success.html", "https://example.org/inbox/", {
+  name: "", email: "", password: "", idp: ""
+}) 
+
+```
+
 
 #### Request-response pattern
 
