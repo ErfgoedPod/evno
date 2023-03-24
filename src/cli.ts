@@ -1,9 +1,9 @@
 #! /usr/bin/env node --experimental-specifier-resolution=node
-
+import {IAuthOptions} from "./interfaces"
 import { Command } from "commander"
 import figlet from "figlet"
 import Receiver from "./receiver"
-import Sender, {IAuthOptions} from "./sender"
+import Sender from "./sender"
 import EventNotification from './notification'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"

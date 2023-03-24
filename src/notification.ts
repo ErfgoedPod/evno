@@ -1,3 +1,4 @@
+import { IEventNotification, IEventAgent, IEventObject } from "./interfaces"
 import { EventEmitter } from 'events'
 import { JsonLdParser } from "jsonld-streaming-parser"
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
@@ -5,28 +6,6 @@ import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
 import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util'
-
-export interface IEventObject {
-    id: NamedNode,
-    type: NamedNode[],
-    [key: string]: any
-}
-
-export interface IEventAgent {
-    id: NamedNode,
-    inbox?: NamedNode,
-    name?: String,
-    type?: NamedNode[]
-}
-
-export interface IEventNotification extends IEventObject {
-    actor: IEventAgent,
-    target?: IEventAgent,
-    origin?: IEventAgent,
-    object: IEventObject,
-    inReplyTo?: NamedNode,
-    context?: NamedNode
-}
 
 export default class EventNotification implements IEventNotification {
     private store: Store = new Store();
@@ -56,7 +35,7 @@ export default class EventNotification implements IEventNotification {
             quad(activity_id, AS('actor'), isNamedNode(options.actor) ? options.actor : options.actor.id),
             quad(activity_id, AS('object'), options.object.id)
         ]
-        
+
         options.target && quads.push(quad(activity_id, AS('target'), isNamedNode(options.target) ? options.target : options.target.id))
         options.origin && quads.push(quad(activity_id, AS('origin'), isNamedNode(options.origin) ? options.origin : options.origin.id))
         options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
@@ -76,7 +55,7 @@ export default class EventNotification implements IEventNotification {
         })
     }
 
-    static create(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+    static create(object: NamedNode, actor: NamedNode | IEventAgent): EventNotification {
 
         return EventNotification.build({
             type: AS('Create'),
@@ -85,7 +64,7 @@ export default class EventNotification implements IEventNotification {
         })
     }
 
-    static remove(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+    static remove(object: NamedNode, actor: NamedNode | IEventAgent): EventNotification {
 
         return EventNotification.build({
             type: AS('Remove'),
@@ -94,7 +73,7 @@ export default class EventNotification implements IEventNotification {
         })
     }
 
-    static update(object: NamedNode, actor:NamedNode | IEventAgent): EventNotification {
+    static update(object: NamedNode, actor: NamedNode | IEventAgent): EventNotification {
 
         return EventNotification.build({
             type: AS('Update'),

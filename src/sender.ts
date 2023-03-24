@@ -1,19 +1,8 @@
-import EventNotification, { IEventAgent } from './notification'
+import { IAuthOptions, IEventAgent, ISenderResult } from './interfaces'
+import EventNotification from './notification'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { NamedNode } from 'n3'
-
-
-// below can be replaced with bashlib IClientCredentialsTokenGenerationOptions?
-export interface IAuthOptions {
-    name: string,
-    email: string,
-    password: string,
-    idp: string,
-    clientCredentialsTokenStorageLocation?: string
-}
-
-interface IResult { success: boolean, location: string | null }
 
 export default class Sender {
 
@@ -29,7 +18,7 @@ export default class Sender {
         return new Sender(actor, authOptions)
     }
 
-    public async send(notification: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async send(notification: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
 
         // merge options
         const merged:IAuthOptions = {
@@ -72,35 +61,35 @@ export default class Sender {
         return { fetch, webId }
     }
 
-    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.announce(object, this.actor, context), inboxUrl, options)
     }
 
-    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.create(object, this.actor), inboxUrl, options)
     }
 
-    public async remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.remove(object, this.actor), inboxUrl, options)
     }
 
-    public async update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.update(object, this.actor), inboxUrl, options)
     }
 
-    public async offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.offer(object, this.actor), inboxUrl, options)
     }
 
-    public async accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.accept(offer, this.actor), inboxUrl, options)
     }
 
-    public async reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.reject(offer, this.actor), inboxUrl, options)
     }
 
-    public async undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<IResult> {
+    public async undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
         return this.send(EventNotification.undo(object, this.actor), inboxUrl, options)
     }
 }
