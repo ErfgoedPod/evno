@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import EventNotification from '../src/notification'
+import EventNotification from '../src/notification.js'
 import * as fs from 'fs'
 import { join } from "path"
 import { JsonLdParser } from "jsonld-streaming-parser"

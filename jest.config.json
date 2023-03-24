@@ -2,5 +2,18 @@
   "transformIgnorePatterns": [
     "node_modules/(?!poll)"
   ],
-  "setupFilesAfterEnv": [ "jest-rdf" ]
+  "setupFilesAfterEnv": [
+    "jest-rdf"
+  ],
+  "extensionsToTreatAsEsm": [
+    ".ts"
+  ],
+  "globals": {
+    "ts-jest": {
+      "useESM": true
+    }
+  },
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
 }

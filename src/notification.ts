@@ -1,11 +1,11 @@
-import { IEventNotification, IEventAgent, IEventObject } from "./interfaces"
+import { IEventNotification, IEventAgent, IEventObject } from "./interfaces.js"
 import { EventEmitter } from 'events'
 import { JsonLdParser } from "jsonld-streaming-parser"
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
 import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
-import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util'
+import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util.js'
 
 export default class EventNotification implements IEventNotification {
     private store: Store = new Store();

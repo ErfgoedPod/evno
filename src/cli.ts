@@ -1,10 +1,10 @@
 #! /usr/bin/env node --experimental-specifier-resolution=node
-import {IAuthOptions} from "./interfaces"
+import {IAuthOptions} from "./interfaces.js"
 import { Command } from "commander"
 import figlet from "figlet"
-import Receiver from "./receiver"
-import Sender from "./sender"
-import EventNotification from './notification'
+import Receiver from "./receiver.js"
+import Sender from "./sender.js"
+import EventNotification from './notification.js'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
 

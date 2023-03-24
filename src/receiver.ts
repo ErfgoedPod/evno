@@ -9,7 +9,7 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
-import EventNotification from './notification'
+import EventNotification from './notification.js'
 
 export default class Receiver extends EventEmitter {
 

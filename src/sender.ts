@@ -1,5 +1,5 @@
-import { IAuthOptions, IEventAgent, ISenderResult } from './interfaces'
-import EventNotification from './notification'
+import { IAuthOptions, IEventAgent, ISenderResult } from './interfaces.js'
+import EventNotification from './notification.js'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { NamedNode } from 'n3'
