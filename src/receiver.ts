@@ -110,10 +110,11 @@ export default class Receiver extends EventEmitter {
             const items = await list(inboxUrl, fetchOptions)
             for (const item of items) {
                 if (this.fetch) {
-                    const response: Response = await this.fetch(item.url)
-
-                    // parse the notification
                     try {
+                        const response: Response = await this.fetch(item.url)
+
+                        // parse the notification
+                    
                         const jsonldParser = JsonLdParser.fromHttpResponse(
                             response.url,
                             response.headers.get('content-type') || "application/ld+json"
