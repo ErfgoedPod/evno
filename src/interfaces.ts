@@ -28,7 +28,7 @@ export interface IAuthOptions {
     email: string,
     password: string,
     idp: string,
-    clientCredentialsTokenStorageLocation?: string
+    tokenLocation?: string
 }
 
 export interface ISenderResult { success: boolean, location: string | null }
