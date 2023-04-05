@@ -44,6 +44,12 @@ program.command('receive')
     receiver.on('notification', async (n: EventNotification) => {
       console.log(await n.serialize())
     })
+    receiver.on('ignore', id => {
+      console.error(`ignored inbox entry with md5 ${id}`)
+    })
+    receiver.on('network_error', e => {
+      console.error(e)
+    })
   })
 
 program.command('init')

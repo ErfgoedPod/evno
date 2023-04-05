@@ -9,6 +9,7 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
+import * as md5 from 'md5'
 import EventNotification from './notification.js'
 
 export default class Receiver extends EventEmitter {
@@ -127,33 +128,43 @@ export default class Receiver extends EventEmitter {
                     try {
                         const response: Response = await this.fetch(item.url)
 
-                        // parse the notification
+                        const responseText = await response.text()
                     
-                        const jsonldParser = JsonLdParser.fromHttpResponse(
-                            response.url,
-                            response.headers.get('content-type') || "application/ld+json"
-                        )
+                        try {
+                            // parse the notification
+                            const jsonldParser = JsonLdParser.fromHttpResponse(
+                                response.url,
+                                response.headers.get('content-type') || "application/ld+json"
+                            )
 
-                        // transform bodystream
-                        //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+                            // transform bodystream
+                            //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
 
-                        // TODO: Fix this when NodeJS vs. Stream API chaos is over
-                        const bodyStream = new Readable()
-                        bodyStream.push(await response.text())
-                        bodyStream.push(null)
+                            // TODO: Fix this when NodeJS vs. Stream API chaos is over
+                            const bodyStream = new Readable()
+                            bodyStream.push(responseText)
+                            bodyStream.push(null)
 
-                        // parse the notification
-                        const notification = await EventNotification.parse(bodyStream, jsonldParser)
+                            // parse the notification
+                            const notification = await EventNotification.parse(bodyStream, jsonldParser)
 
-                        // emit an event with notification
-                        const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
+                            // emit an event with notification
+                            const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
 
-                        if (this.db && !this.db.get(idToCheck)) {
-                            this.emit('notification', notification)
-                            this.db.set(idToCheck, true)
+                            if (this.db && !this.db.get(idToCheck)) {
+                                this.emit('notification', notification)
+                                this.db.set(idToCheck, true)
+                            }
+                        }
+                        catch (e) {
+                            const idToCheck = md5.default(responseText)
+                            if (this.db && !this.db.get(idToCheck)) {
+                                this.emit('ignore',idToCheck)
+                                this.db.set(idToCheck, true)
+                            }
                         }
                     } catch (e) {
-                        this.emit('error', e)
+                        this.emit('network_error', e)
                     }
                 }
             }
