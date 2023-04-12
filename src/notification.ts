@@ -17,7 +17,7 @@ export default class EventNotification implements IEventNotification {
         // Get ID when undefined
         let activity_id
         for (const quad of this.store.match(null, RDF('type'), null, null)) {
-            if (isAllowedActivityType(quad.object as Term)) {
+            if (this.store.getSubjects(AS('object'), quad.subject, null).length == 0 && isAllowedActivityType(quad.object as Term)) {
                 activity_id = quad.subject as NamedNode
                 break
             }
