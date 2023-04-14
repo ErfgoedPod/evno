@@ -71,12 +71,13 @@
     "@qiwi/primitive-storage": "^1.4.14",
     "@rdfjs/serializer-jsonld-ext": "^3.0.0",
     "@rdfjs/types": "^1.1.0",
+    "@types/n3": "^1.10.4",
     "figlet": "^1.5.2",
     "jsonld-streaming-parser": "^3.0.1",
     "n3": "^1.16.3",
     "poll": "^3.2.1",
     "readable-web-to-node-stream": "^3.0.2",
-    "solid-bashlib": "^0.3.3",
+    "solid-bashlib": "^0.3.4",
     "uuid": "^9.0.0"
   }
 }
