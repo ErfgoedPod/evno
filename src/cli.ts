@@ -88,9 +88,9 @@ program.command('send')
     const notification = await EventNotification.parse(myTextStream, myParser)
 
     const sender = await Sender.build(notification.actor, program.opts() as IAuthOptions)
-    const { success, location } = await sender.send(notification, inboxUrl)
-    if (success) {
-      return console.log('Notification %s delivered at %s', notification.id, location)
+    const response = await sender.send(notification, inboxUrl)
+    if (response.ok) {
+      return console.log('Notification %s delivered at %s', notification.id, response.headers.get('location'))
     }
     console.log('Failed to deliver notification %s', notification.id)
   })

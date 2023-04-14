@@ -1,4 +1,4 @@
-import { IAuthOptions, IEventAgent, ISenderResult } from './interfaces.js'
+import { IAuthOptions, IEventAgent } from './interfaces.js'
 import EventNotification from './notification.js'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
@@ -18,7 +18,7 @@ export default class Sender {
         return new Sender(actor, authOptions)
     }
 
-    public async send(notification: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async send(notification: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
 
         // merge options
         const merged:IAuthOptions = {
@@ -29,13 +29,11 @@ export default class Sender {
         const authFetch = (await this.login(merged)).fetch
 
         const result = await notification.serialize()
-        const response = await authFetch( inboxUrl || (await this.discoverInbox(notification)), {
+        return authFetch( inboxUrl || (await this.discoverInbox(notification)), {
             method: "POST",
             body: result,
             headers: { "content-type": "application/ld+json" }
         })
-
-        return { success: response.ok, location: response.headers.get('location') }
     }
 
     private async discoverInbox(notification:EventNotification): Promise<string> {
@@ -61,35 +59,35 @@ export default class Sender {
         return { fetch, webId }
     }
 
-    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.announce(object, this.actor, context), inboxUrl, options)
     }
 
-    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.create(object, this.actor), inboxUrl, options)
     }
 
-    public async remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async remove(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.remove(object, this.actor), inboxUrl, options)
     }
 
-    public async update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async update(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.update(object, this.actor), inboxUrl, options)
     }
 
-    public async offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async offer(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.offer(object, this.actor), inboxUrl, options)
     }
 
-    public async accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async accept(offer: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.accept(offer, this.actor), inboxUrl, options)
     }
 
-    public async reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async reject(offer: EventNotification,  inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.reject(offer, this.actor), inboxUrl, options)
     }
 
-    public async undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<ISenderResult> {
+    public async undo(object: EventNotification, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.undo(object, this.actor), inboxUrl, options)
     }
 }

@@ -30,5 +30,3 @@ export interface IAuthOptions {
     idp: string,
     tokenLocation?: string
 }
-
-export interface ISenderResult { success: boolean, location: string | null }
