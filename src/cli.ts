@@ -7,6 +7,7 @@ import Sender from "./sender.js"
 import EventNotification from './notification.js'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
+import parse from 'parse-duration';
 
 
 const program = new Command()
@@ -14,8 +15,9 @@ const program = new Command()
 console.log(figlet.textSync("EventNotifications"))
 
 function myParseInt(value: string) {
-  // parseInt takes a string and a radix
-  const parsedValue = parseInt(value, 10)
+  // Parse accepts milliseconds or a wide range of
+  // human reable inputs, e.g 1h30m10s
+  const parsedValue = parse(value);
   if (isNaN(parsedValue)) {
     throw new InvalidArgumentError('Not a number.')
   }
@@ -39,7 +41,7 @@ program.command('receive')
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
   .option("-, --stdout", "Pipe output to stdout")
   .option("-n, --nocache", "Don't persist cache")
-  .option("-f, --pollingFrequency  <value>", "The frequency in milliseconds to poll the inbox", myParseInt, 1000)
+  .option("-f, --pollingFrequency  <duration>", "The frequency to poll the inbox", myParseInt, 1000)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
   .action(async (inboxUrl, options) => {

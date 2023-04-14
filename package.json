@@ -75,6 +75,7 @@
     "figlet": "^1.5.2",
     "jsonld-streaming-parser": "^3.0.1",
     "n3": "^1.16.3",
+    "parse-duration": "^1.0.3",
     "poll": "^3.2.1",
     "readable-web-to-node-stream": "^3.0.2",
     "solid-bashlib": "^0.3.4",
