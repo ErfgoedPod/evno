@@ -62,6 +62,7 @@ export default class Receiver extends EventEmitter {
         tokenLocation?: string,
         cache?: boolean,
         cachePath?: string,
+        pollingFrequency?: number
     }): Promise<Receiver> {
         let token 
 
@@ -80,7 +81,7 @@ export default class Receiver extends EventEmitter {
 
         const session = await authenticateToken(token, token.idp)
 
-        return new Receiver(session, { cache: !!options.cache, cachePath: options.cachePath })
+        return new Receiver(session, options)
     }
 
     public async init(baseUrl: string, inboxPath: string = 'inbox/'): Promise<string> {
