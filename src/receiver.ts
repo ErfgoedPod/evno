@@ -18,16 +18,17 @@ export default class Receiver extends EventEmitter {
 
     private _webId?: string
     private fetch: undefined | typeof fetch
-    private freq: number = 1000;
+    private freq: number;
     private stopPolling = false;
 
     private db: ICachedStorage
 
-    private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string } = {}) {
+    private constructor(session: SessionInfo, options: { cache?: boolean, cachePath?: string, pollingFrequency?: number } = {}) {
         super()
 
         this.fetch = session.fetch
         this._webId = session.webId
+        this.freq = options.pollingFrequency || 1000
 
         if (options.cache) {
             const cachePath = options.cachePath || './.cache/cache.db'
