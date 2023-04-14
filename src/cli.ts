@@ -63,6 +63,19 @@ program.command('init')
     (!options.stdout) && console.log('Initalized inbox at %s', inbox)
   })
 
+program.command('grant')
+  .description('Grant an agent access to inbox')
+  .argument("<inboxUrl>", 'URL of the LDN inbox')
+  .argument("<agentUri>", 'URI or WebID of the Agent')
+  .action(async (inboxUrl, agentUri, options) => {
+    const { name, email, password, idp, tokenLocation} = program.opts()
+    const receiver = await Receiver.build({
+      name, email, password, idp, tokenLocation
+    });
+    (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId)
+    await receiver.grantAccess(inboxUrl, agentUri);
+  })
+
 program.command('send')
   .description("Send a notification to a inbox")
   .argument("<inboxUrl>", 'URL of the LDN inbox')

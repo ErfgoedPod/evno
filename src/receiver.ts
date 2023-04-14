@@ -10,6 +10,9 @@ import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
 import EventNotification from './notification.js'
+import { NamedNode } from 'n3'
+import { IEventAgent } from './interfaces.js'
+import { isNamedNode, isString } from './util.js'
 
 export default class Receiver extends EventEmitter {
 
@@ -104,6 +107,20 @@ export default class Receiver extends EventEmitter {
         console.log(`Setting read and append permissions on container ${inboxUrl}`)
         await changePermissions(inboxUrl, [permission], fetchOptions)
         return inboxUrl
+    }
+
+    private agentIdToString(agent: string | NamedNode | IEventAgent): string {
+        if (isString(agent))
+            return agent
+        
+        return isNamedNode(agent) ? agent.id : (agent as IEventAgent).id.id
+    }
+
+    public async grantAccess(inboxUrl: string, agent: string | NamedNode | IEventAgent) {
+        const agentId = this.agentIdToString(agent)
+        const permission: IPermissionOperation = { type: 'agent', append: true, id: agentId }
+        console.log(`Granting ${agentId} append permissions on container ${inboxUrl}`)
+        await changePermissions(inboxUrl, [permission], {fetch: this.fetch, verbose: true})
     }
 
     public stop() {
