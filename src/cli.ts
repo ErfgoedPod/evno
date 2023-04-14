@@ -1,6 +1,6 @@
 #! /usr/bin/env node --experimental-specifier-resolution=node
-import {IAuthOptions} from "./interfaces.js"
-import { Command } from "commander"
+import { IAuthOptions } from "./interfaces.js"
+import { Command, InvalidArgumentError } from "commander"
 import figlet from "figlet"
 import Receiver from "./receiver.js"
 import Sender from "./sender.js"
@@ -12,6 +12,15 @@ import { JsonLdParser } from "jsonld-streaming-parser"
 const program = new Command()
 
 console.log(figlet.textSync("EventNotifications"))
+
+function myParseInt(value: string) {
+  // parseInt takes a string and a radix
+  const parsedValue = parseInt(value, 10)
+  if (isNaN(parsedValue)) {
+    throw new InvalidArgumentError('Not a number.')
+  }
+  return parsedValue
+}
 
 program
   .name("evno")
@@ -30,12 +39,13 @@ program.command('receive')
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
   .option("-, --stdout", "Pipe output to stdout")
   .option("-n, --nocache", "Don't persist cache")
+  .option("-f, --pollingFrequency  <value>", "The frequency in milliseconds to poll the inbox", myParseInt, 1000)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
   .action(async (inboxUrl, options) => {
-    const { name, email, password, idp, tokenLocation} = program.opts()
+    const { name, email, password, idp, tokenLocation } = program.opts()
     const receiver = await Receiver.build({
-      name, email, password, idp, tokenLocation, cache: !options.nocache, cachePath: options.cachePath
+      name, email, password, idp, tokenLocation, cache: !options.nocache, cachePath: options.cachePath, pollingFrequency: options.pollingFrequency
     });
 
     (!options.stdout) && console.log('Logged with id %s', receiver.webId)
@@ -51,7 +61,7 @@ program.command('init')
   .argument("<baseUrl>", 'Base URL of the Solid pod')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
-    const { name, email, password, idp, tokenLocation} = program.opts()
+    const { name, email, password, idp, tokenLocation } = program.opts()
     const receiver = await Receiver.build({
       name, email, password, idp, tokenLocation
     });
@@ -68,12 +78,12 @@ program.command('grant')
   .argument("<inboxUrl>", 'URL of the LDN inbox')
   .argument("<agentUri>", 'URI or WebID of the Agent')
   .action(async (inboxUrl, agentUri, options) => {
-    const { name, email, password, idp, tokenLocation} = program.opts()
+    const { name, email, password, idp, tokenLocation } = program.opts()
     const receiver = await Receiver.build({
       name, email, password, idp, tokenLocation
     });
     (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId)
-    await receiver.grantAccess(inboxUrl, agentUri);
+    await receiver.grantAccess(inboxUrl, agentUri)
   })
 
 program.command('send')
