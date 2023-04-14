@@ -22,6 +22,7 @@ program
   .option("-p, --password <password>", "Password")
   .option("-i, --idp <idp>", "Identity provider", "http://localhost:3001/")
   .option("-t, --tokenLocation <tokenLocation>", "Client token storage location", "./")
+  .option("-v, --verbose", "Output verbose logging", false)
 
 program.command('receive')
   .description("Watch an inbox for new notifications")
@@ -33,7 +34,7 @@ program.command('receive')
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
   .action(async (inboxUrl, options) => {
-    const { name, email, password, idp, tokenLocation} = program.opts()
+    const { name, email, password, idp, tokenLocation, verbose} = program.opts()
     const receiver = await Receiver.build({
       name, email, password, idp, tokenLocation, cache: !options.nocache, cachePath: options.cachePath
     });
@@ -44,12 +45,11 @@ program.command('receive')
     receiver.on('notification', async (n: EventNotification) => {
       console.log(await n.serialize())
     })
-    receiver.on('ignore', id => {
-      console.error(`ignored inbox entry with md5 ${id}`)
-    })
-    receiver.on('network_error', e => {
-      console.error(e)
-    })
+    if (verbose){
+      receiver.on('error', e => {
+        console.error(e)
+      })
+    }
   })
 
 program.command('init')
