@@ -60,15 +60,15 @@ export default class Receiver extends EventEmitter {
         cache?: boolean,
         cachePath?: string,
     }): Promise<Receiver> {
-        let token 
+        let token
 
         if (options.tokenLocation) {
             if (fs.existsSync(options.tokenLocation)) {
-                token = JSON.parse(fs.readFileSync(options.tokenLocation,'utf8'));
+                token = JSON.parse(fs.readFileSync(options.tokenLocation, 'utf8'))
             }
             else {
                 token = await generateCSSToken(options)
-                fs.writeFileSync(options.tokenLocation,JSON.stringify(token)) 
+                fs.writeFileSync(options.tokenLocation, JSON.stringify(token))
             }
         }
         else {
@@ -129,7 +129,7 @@ export default class Receiver extends EventEmitter {
                         const response: Response = await this.fetch(item.url)
 
                         const responseText = await response.text()
-                    
+
                         try {
                             // parse the notification
                             const jsonldParser = JsonLdParser.fromHttpResponse(
@@ -151,20 +151,19 @@ export default class Receiver extends EventEmitter {
                             // emit an event with notification
                             const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
 
-                            if (this.db && !this.db.get(idToCheck)) {
+                            const hash = md5.default(responseText)
+                            if (this.db && this.db.get(idToCheck) !== hash) {
                                 this.emit('notification', notification)
-                                this.db.set(idToCheck, true)
+                                this.db.set(idToCheck, hash)
                             }
                         }
                         catch (e) {
-                            const idToCheck = md5.default(responseText)
-                            if (this.db && !this.db.get(idToCheck)) {
-                                this.emit('ignore',idToCheck)
-                                this.db.set(idToCheck, true)
-                            }
+                            this.emit('error.parsing', e)
+                            this.emit('error', e)
                         }
                     } catch (e) {
-                        this.emit('network_error', e)
+                        this.emit('error.fetch', e)
+                        this.emit('error', e)
                     }
                 }
             }
