@@ -2898,9 +2898,9 @@
     openid-client "^5.1.0"
     uuid "^9.0.0"
 
-"@inrupt/solid-client@^1.21.0":
+"@inrupt/solid-client@1.23.3":
   version "1.23.3"
-  resolved "https://registry.npmjs.org/@inrupt/solid-client/-/solid-client-1.23.3.tgz"
+  resolved "https://registry.yarnpkg.com/@inrupt/solid-client/-/solid-client-1.23.3.tgz#15a394a7831d04ad19cc0b136516c1df18896cb3"
   integrity sha512-+qzlqtXkM1V2wdZcIWpq6mS+NAfJIeAyWghQBHHLz1hmHiKaE+H0UljOt2B4oSrRYuQq/PYvD/a6N4vfMU+vWg==
   dependencies:
     "@rdfjs/dataset" "^1.1.0"
@@ -8165,13 +8165,13 @@ socks@^2.3.3:
     ip "^2.0.0"
     smart-buffer "^4.2.0"
 
-solid-bashlib@0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/solid-bashlib/-/solid-bashlib-0.2.3.tgz#5841bb455d961ef934b37372ce3dd8d4295de05e"
-  integrity sha512-1+VkJAkB1Wxm8kTHJTqbo9ZfAw7NFV6FztPEy4z1E/3pDgqQ61UKWFdL7wqjYEi0WW8+D7IaVsFSW5/SsYsbMw==
+solid-bashlib@^0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/solid-bashlib/-/solid-bashlib-0.3.3.tgz#066a4941d8728ecd681cb2211fa1403a95286f6a"
+  integrity sha512-VQ0KU9OjtcG0mTGky3CEBDPHgx+pUD2RlzyBlwozxD8/Pos6LxnQ0/8UWe6skhz0ej5V1cfLlzg3k89ew1WodQ==
   dependencies:
     "@comunica/query-sparql" "^2.1.0"
-    "@inrupt/solid-client" "^1.21.0"
+    "@inrupt/solid-client" "1.23.3"
     "@inrupt/solid-client-authn-node" "^1.11.7"
     chalk "^4.1.2"
     cli-columns "^4.0.0"

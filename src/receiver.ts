@@ -4,7 +4,7 @@ import { JsonLdParser } from "jsonld-streaming-parser"
 import { list, makeDirectory, changePermissions, authenticateToken, generateCSSToken } from "solid-bashlib"
 //import { ReadableWebToNodeStream } from 'readable-web-to-node-stream'
 import { Readable } from 'readable-stream'
-import { PermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
+import { IPermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
@@ -100,7 +100,7 @@ export default class Receiver extends EventEmitter {
             console.log(`Container ${inboxUrl} already exists.`)
         }
 
-        const permission: PermissionOperation = { type: 'agent', append: true, read: true, id: this.webId }
+        const permission: IPermissionOperation = { type: 'agent', append: true, read: true, id: this.webId }
         console.log(`Setting read and append permissions on container ${inboxUrl}`)
         await changePermissions(inboxUrl, [permission], fetchOptions)
         return inboxUrl
