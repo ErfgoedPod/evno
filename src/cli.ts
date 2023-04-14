@@ -17,11 +17,11 @@ program
   .name("evno")
   .version("1.0.0")
   .description("A CLI for using Linked Data Notification in Solid Pods")
-  .requiredOption("-n, --name <username>", "Username")
-  .requiredOption("-e, --email <email>", "Email")
-  .requiredOption("-p, --password <password>", "Password")
+  .option("-n, --name <username>", "Username")
+  .option("-e, --email <email>", "Email")
+  .option("-p, --password <password>", "Password")
   .option("-i, --idp <idp>", "Identity provider", "http://localhost:3001/")
-  .option("-t, --tokenLocation", "Client token storage location", "./")
+  .option("-t, --tokenLocation <tokenLocation>", "Client token storage location", "./")
 
 program.command('receive')
   .description("Watch an inbox for new notifications")
@@ -33,12 +33,12 @@ program.command('receive')
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
   .action(async (inboxUrl, options) => {
-    const { name, email, password, idp, clientCredentialsTokenStorageLocation } = program.opts()
+    const { name, email, password, idp, tokenLocation} = program.opts()
     const receiver = await Receiver.build({
-      name, email, password, idp, clientCredentialsTokenStorageLocation, cache: !options.nocache, cachePath: options.cachePath
+      name, email, password, idp, tokenLocation, cache: !options.nocache, cachePath: options.cachePath
     });
 
-    (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId)
+    (!options.stdout) && console.log('Logged with id %s', receiver.webId)
 
     receiver.start(inboxUrl, options.strategy)
     receiver.on('notification', async (n: EventNotification) => {
@@ -51,9 +51,9 @@ program.command('init')
   .argument("<baseUrl>", 'Base URL of the Solid pod')
   .argument("[inboxPath]", 'Path to inbox')
   .action(async (baseUrl, inboxPath, options) => {
-    const { name, email, password, idp, clientCredentialsTokenStorageLocation } = program.opts()
+    const { name, email, password, idp, tokenLocation} = program.opts()
     const receiver = await Receiver.build({
-      name, email, password, idp, clientCredentialsTokenStorageLocation
+      name, email, password, idp, tokenLocation
     });
 
     (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId)

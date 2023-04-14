@@ -55,12 +55,26 @@ export default class Receiver extends EventEmitter {
         email: string,
         password: string,
         idp: string,
-        clientCredentialsTokenStorageLocation?: string,
+        tokenLocation?: string,
         cache?: boolean,
         cachePath?: string,
     }): Promise<Receiver> {
-        let token = await generateCSSToken(options)
-        const session = await authenticateToken(token, options.idp)
+        let token 
+
+        if (options.tokenLocation) {
+            if (fs.existsSync(options.tokenLocation)) {
+                token = JSON.parse(fs.readFileSync(options.tokenLocation,'utf8'));
+            }
+            else {
+                token = await generateCSSToken(options)
+                fs.writeFileSync(options.tokenLocation,JSON.stringify(token)) 
+            }
+        }
+        else {
+            token = await generateCSSToken(options)
+        }
+
+        const session = await authenticateToken(token, token.idp)
 
         return new Receiver(session, { cache: !!options.cache, cachePath: options.cachePath })
     }
