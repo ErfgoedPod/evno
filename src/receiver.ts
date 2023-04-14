@@ -9,6 +9,7 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
+import * as md5 from 'md5'
 import EventNotification from './notification.js'
 import { NamedNode } from 'n3'
 import { IEventAgent } from './interfaces.js'
@@ -62,15 +63,15 @@ export default class Receiver extends EventEmitter {
         cache?: boolean,
         cachePath?: string,
     }): Promise<Receiver> {
-        let token 
+        let token
 
         if (options.tokenLocation) {
             if (fs.existsSync(options.tokenLocation)) {
-                token = JSON.parse(fs.readFileSync(options.tokenLocation,'utf8'));
+                token = JSON.parse(fs.readFileSync(options.tokenLocation, 'utf8'))
             }
             else {
                 token = await generateCSSToken(options)
-                fs.writeFileSync(options.tokenLocation,JSON.stringify(token)) 
+                fs.writeFileSync(options.tokenLocation, JSON.stringify(token))
             }
         }
         else {
@@ -144,32 +145,41 @@ export default class Receiver extends EventEmitter {
                     try {
                         const response: Response = await this.fetch(item.url)
 
-                        // parse the notification
-                    
-                        const jsonldParser = JsonLdParser.fromHttpResponse(
-                            response.url,
-                            response.headers.get('content-type') || "application/ld+json"
-                        )
+                        const responseText = await response.text()
 
-                        // transform bodystream
-                        //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+                        try {
+                            // parse the notification
+                            const jsonldParser = JsonLdParser.fromHttpResponse(
+                                response.url,
+                                response.headers.get('content-type') || "application/ld+json"
+                            )
 
-                        // TODO: Fix this when NodeJS vs. Stream API chaos is over
-                        const bodyStream = new Readable()
-                        bodyStream.push(await response.text())
-                        bodyStream.push(null)
+                            // transform bodystream
+                            //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
 
-                        // parse the notification
-                        const notification = await EventNotification.parse(bodyStream, jsonldParser)
+                            // TODO: Fix this when NodeJS vs. Stream API chaos is over
+                            const bodyStream = new Readable()
+                            bodyStream.push(responseText)
+                            bodyStream.push(null)
 
-                        // emit an event with notification
-                        const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
+                            // parse the notification
+                            const notification = await EventNotification.parse(bodyStream, jsonldParser)
 
-                        if (this.db && !this.db.get(idToCheck)) {
-                            this.emit('notification', notification)
-                            this.db.set(idToCheck, true)
+                            // emit an event with notification
+                            const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
+
+                            const hash = md5.default(responseText)
+                            if (this.db && this.db.get(idToCheck) !== hash) {
+                                this.emit('notification', notification)
+                                this.db.set(idToCheck, hash)
+                            }
+                        }
+                        catch (e) {
+                            this.emit('error.parsing', e)
+                            this.emit('error', e)
                         }
                     } catch (e) {
+                        this.emit('error.fetch', e)
                         this.emit('error', e)
                     }
                 }
