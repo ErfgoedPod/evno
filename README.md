@@ -30,6 +30,31 @@ receiver.on('notification', async (n) => {
 })
 ```
 
+### Listening to errors
+
+```javascript
+import { Receiver } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+const receiver = await Receiver.build(options);
+receiver.start("https://localhost:3000/inbox","notification_id") // Use the notifcation strategy
+receiver.on('error.parsing', async (e) => {
+  console.log(e)
+})
+receiver.on('error.fetch', async (e) => {
+  console.log(e)
+})
+receiver.on('error', async (e) => {
+  console.log(e)
+})
+```
+
+| Event | Description |
+| `error.fetch`| Fetching the notification resource failed |
+| `error.parsing`| The notification was fetched, but failed to parse. |
+| `error`| An error occurred with processing the notification.  |
+
 ### Initalizing an LDN inbox in a Solid pod
 
 ```javascript
@@ -55,7 +80,11 @@ const actor = {
 }
 
 const sender = Sender.build(actor, options);
-sender.send()
+const response = sender.send() // Returns a Fetch API Response object
+
+if (response.ok) {
+  console.log('The notification was sent successfully')
+}
 ```
 
 
@@ -165,17 +194,19 @@ Usage: evno [options] [command]
 A CLI for using Linked Data Notification in Solid Pods
 
 Options:
-  -V, --version                     output the version number
-  -n, --name <username>             Username
-  -e, --email <email>               Email
-  -p, --password <password>         Password
-  -i, --idp <idp>                   Identity provider (default: "http://localhost:3001/")
-  -t, --tokenLocation               Client token storage location
-  -h, --help                        display help for command
+  -V, --version                        output the version number
+  -n, --name <username>                Username
+  -e, --email <email>                  Email
+  -p, --password <password>            Password
+  -i, --idp <idp>                      Identity provider (default: "http://localhost:3001/")
+  -t, --tokenLocation <tokenLocation>  Client token storage location (default: "./")
+  -v, --verbose                        Output verbose logging (default: false)
+  -h, --help                           display help for command
 
 Commands:
-  receive [options] <inboxUrl>      Watch an inbox for new notifications
-  init <baseUrl> [inboxPath]        Initialize an inbox
-  send [options] <inboxUrl> <path>  Send a notification to a inbox
-  help [command]                    display help for command
+  receive [options] <inboxUrl>         Watch an inbox for new notifications
+  init <baseUrl> [inboxPath]           Initialize an inbox
+  grant <inboxUrl> <agentUri>          Grant an agent access to inbox
+  send [options] <inboxUrl> <path>     Send a notification to a inbox
+  help [command]                       display help for command
 ```
