@@ -5,7 +5,7 @@ import { join } from "path"
 import { JsonLdParser } from "jsonld-streaming-parser"
 import { DataFactory } from 'n3'
 const { namedNode } = DataFactory
-import "jest-rdf";
+import "jest-rdf"
 
 
 function getAssetStream(path: string): fs.ReadStream {
@@ -13,7 +13,7 @@ function getAssetStream(path: string): fs.ReadStream {
 }
 
 describe('EventNotification', () => {
-    describe('parseNotification()', () => {
+    describe('parse()', () => {
         it('parses notification response', async () => {
 
             const myParser = new JsonLdParser()
@@ -26,6 +26,21 @@ describe('EventNotification', () => {
             expect(notification).toHaveProperty('actor.id.id', 'https://orcid.org/0000-0007-01219-312199')
         })
     })
+    // describe('parseFromResponse()', () => {
+    //     it('parses JSON-LD response', async () => {
+
+    //         const myParser = new JsonLdParser()
+
+    //         const myTextStream = getAssetStream('./assets/notification.jsonld')
+    //         const headers = new Headers()
+    //         headers.set("Content-Type", "application/ld+json")
+    //         const notification = await EventNotification.parseFromResponse()
+
+    //         expect(notification).toHaveProperty('id.id', "https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
+    //         expect(notification).toHaveProperty('actor.id.id', 'https://orcid.org/0000-0007-01219-312199')
+    //     })
+    // })
+
     describe('build()', () => {
         describe('with mandatory parameters', () => {
             const notification = EventNotification.build({

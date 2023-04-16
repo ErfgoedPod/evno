@@ -1,9 +1,6 @@
 import { EventEmitter } from 'events'
 import { poll } from 'poll'
-import { JsonLdParser } from "jsonld-streaming-parser"
 import { list, makeDirectory, changePermissions, authenticateToken, generateCSSToken } from "solid-bashlib"
-//import { ReadableWebToNodeStream } from 'readable-web-to-node-stream'
-import { Readable } from 'readable-stream'
 import { IPermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
@@ -19,7 +16,7 @@ export default class Receiver extends EventEmitter {
 
     private _webId?: string
     private fetch: undefined | typeof fetch
-    private freq: number;
+    private freq: number
     private stopPolling = false;
 
     private db: ICachedStorage
@@ -115,7 +112,7 @@ export default class Receiver extends EventEmitter {
     private agentIdToString(agent: string | NamedNode | IEventAgent): string {
         if (isString(agent))
             return agent
-        
+
         return isNamedNode(agent) ? agent.id : (agent as IEventAgent).id.id
     }
 
@@ -123,7 +120,7 @@ export default class Receiver extends EventEmitter {
         const agentId = this.agentIdToString(agent)
         const permission: IPermissionOperation = { type: 'agent', append: true, id: agentId }
         console.log(`Granting ${agentId} append permissions on container ${inboxUrl}`)
-        await changePermissions(inboxUrl, [permission], {fetch: this.fetch, verbose: true})
+        await changePermissions(inboxUrl, [permission], { fetch: this.fetch, verbose: true })
     }
 
     public stop() {
@@ -147,29 +144,14 @@ export default class Receiver extends EventEmitter {
                     try {
                         const response: Response = await this.fetch(item.url)
 
-                        const responseText = await response.text()
-
                         try {
                             // parse the notification
-                            const jsonldParser = JsonLdParser.fromHttpResponse(
-                                response.url,
-                                response.headers.get('content-type') || "application/ld+json"
-                            )
-
-                            // transform bodystream
-                            //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
-
-                            // TODO: Fix this when NodeJS vs. Stream API chaos is over
-                            const bodyStream = new Readable()
-                            bodyStream.push(responseText)
-                            bodyStream.push(null)
-
-                            // parse the notification
-                            const notification = await EventNotification.parse(bodyStream, jsonldParser)
+                            const notification = await EventNotification.parseFromResponse(response)
 
                             // emit an event with notification
                             const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
 
+                            const responseText = await response.text()
                             const hash = md5.default(responseText)
                             if (this.db && this.db.get(idToCheck) !== hash) {
                                 this.emit('notification', notification)
