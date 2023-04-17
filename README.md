@@ -68,6 +68,17 @@ const inbox = await receiver.init("https://localhost:3000/", "inbox/");
 console.log(inbox) // "https://localhost:3000/inbox/"
 ```
 
+### Grant an agent quick append access to an LDN inbox in a Solid pod
+
+```javascript
+import { Receiver } from "evno"
+const options = {
+  name: "", email: "", password: "", idp: ""
+}
+const receiver = await Receiver.build(options);
+await receiver.grantAccess("https://localhost:3000/inbox/", "https://example.org/webid#me");
+```
+
 ### Sending an event notification
 
 ```javascript
