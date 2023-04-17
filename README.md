@@ -51,6 +51,7 @@ receiver.on('error', async (e) => {
 ```
 
 | Event | Description |
+| ----- | ----------- |
 | `error.fetch`| Fetching the notification resource failed |
 | `error.parsing`| The notification was fetched, but failed to parse. |
 | `error`| An error occurred with processing the notification.  |
