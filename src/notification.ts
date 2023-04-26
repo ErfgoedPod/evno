@@ -1,11 +1,19 @@
 import { IEventNotification, IEventAgent, IEventObject } from "./interfaces.js"
 import { EventEmitter } from 'events'
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
-import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
+import { Store, Quad, NamedNode, Term, DataFactory, Literal } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
 import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util.js'
 import { Sink, Stream } from 'rdf-js'
+
+function agentToQuads(agent: IEventAgent): Quad[] {
+    const quads: Quad[] = []
+    agent.inbox && quads.push(quad(agent.id, LDP('inbox'), agent.inbox))
+    agent.name && quads.push(quad(agent.id, LDP('inbox'), agent.name))
+    agent.type && agent.type.forEach((t) => quads.push(quad( agent.id, RDF('type'), t)))
+    return quads
+}
 
 export default class EventNotification implements IEventNotification {
     private store: Store = new Store();
@@ -30,14 +38,40 @@ export default class EventNotification implements IEventNotification {
     static build(options: { type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?: NamedNode, context?: NamedNode, id?: NamedNode }): EventNotification {
         const activity_id = options.id || getId()
 
+        const actor = options.actor
+        
         const quads = [
             quad(activity_id, RDF('type'), options.type),
-            quad(activity_id, AS('actor'), isNamedNode(options.actor) ? options.actor : options.actor.id),
             quad(activity_id, AS('object'), options.object.id)
         ]
+        
+        if (isNamedNode(actor)){
+            quads.push(quad(activity_id, AS('actor'), actor as NamedNode))
+        } else {
+            quads.push(quad(activity_id, AS('actor'), actor.id))
+            quads.push(...agentToQuads(actor))
+        }
 
-        options.target && quads.push(quad(activity_id, AS('target'), isNamedNode(options.target) ? options.target : options.target.id))
-        options.origin && quads.push(quad(activity_id, AS('origin'), isNamedNode(options.origin) ? options.origin : options.origin.id))
+        if (options.target){
+            const target = options.target
+            if (isNamedNode(target)){
+                quads.push(quad(activity_id, AS('target'), target as NamedNode))
+            } else {
+                quads.push(quad(activity_id, AS('target'), target.id))
+                quads.push(...agentToQuads(target))
+            }
+        }
+
+        if (options.origin){
+            const origin = options.origin
+            if (isNamedNode(origin)){
+                quads.push(quad(activity_id, AS('origin'), origin as NamedNode))
+            } else {
+                quads.push(quad(activity_id, AS('origin'), origin.id))
+                quads.push(...agentToQuads(origin))
+            }
+        }
+        
         options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
         options.context && quads.push(quad(activity_id, AS('context'), options.context))
 
@@ -179,7 +213,7 @@ export default class EventNotification implements IEventNotification {
         return {
             id: agent_id as NamedNode,
             inbox: !inboxArr.length ? undefined : inboxArr[0] as NamedNode,
-            name: !nameArr.length ? undefined : nameArr[0].value,
+            name: !nameArr.length ? undefined : nameArr[0] as Literal,
             type: this.store.getObjects(agent_id, RDF('type'), null).filter(isAllowedAgentType) as NamedNode[]
         }
     }

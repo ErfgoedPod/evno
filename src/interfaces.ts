@@ -1,4 +1,4 @@
-import { NamedNode } from 'n3'
+import { Literal, NamedNode } from 'n3'
 
 export interface IEventObject {
     id: NamedNode,
@@ -9,7 +9,7 @@ export interface IEventObject {
 export interface IEventAgent {
     id: NamedNode,
     inbox?: NamedNode,
-    name?: String,
+    name?: Literal,
     type?: NamedNode[]
 }
 
