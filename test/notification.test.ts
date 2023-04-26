@@ -107,6 +107,27 @@ describe('EventNotification', () => {
             //     }))
             // })
         })
+
+        describe('with actor inbox', () => {
+            const notification = EventNotification.build({
+                type: namedNode("https://www.w3.org/ns/activitystreams#Announce"),
+                actor: {
+                    id: namedNode("https://orcid.org/0000-0007-01219-312199"),
+                    inbox: namedNode("https://example.org/inbox/")
+                },
+                object: {
+                    id: namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"),
+                    type: [namedNode("https://www.w3.org/ns/activitystreams#Article")]
+                },
+                id: namedNode("https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
+            })
+
+            it('actor has correct id', () => {
+                expect(notification).toHaveProperty('actor.id.id', 'https://orcid.org/0000-0007-01219-312199')
+                expect(notification).toHaveProperty('actor.inbox.id', "https://example.org/inbox/")
+            })
+
+        })
     })
     describe('announce()', () => {
         describe('without context', () => {
@@ -187,29 +208,67 @@ describe('EventNotification', () => {
     })
 
     describe('accept()', () => {
-        const offer = EventNotification.offer(
-            namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"),
-            namedNode("https://orcid.org/0000-0007-01219-312199")
-        )
+        describe('with simple actor', () => {
+            const offer = EventNotification.offer(
+                namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"),
+                namedNode("https://orcid.org/0000-0007-01219-312199")
+            )
 
-        const notification = EventNotification.accept(
-            offer,
-            namedNode("https://orcid.org/0000-0007-01219-312200")
-        )
+            const notification = EventNotification.accept(
+                offer,
+                namedNode("https://orcid.org/0000-0007-01219-312200")
+            )
 
-        it('must be of type as:Accept', () => {
-            expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Accept"))
+            it('must be of type as:Accept', () => {
+                expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Accept"))
+            })
+
+            it('must have context', () => {
+                expect(notification).toHaveProperty('context')
+                expect(notification.context).toBeDefined()
+                expect(notification.context).toEqualRdfTerm(namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"))
+            })
+
+            it('must have inReplyTo', () => {
+                expect(notification).toHaveProperty('inReplyTo', offer.id)
+            })
         })
 
-        it('must have context', () => {
-            expect(notification).toHaveProperty('context')
-            expect(notification.context).toBeDefined()
-            expect(notification.context).toEqualRdfTerm(namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"))
+        describe('with complex actor', () => {
+            const offer = EventNotification.offer(
+                namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"),
+                {
+                    id: namedNode("https://orcid.org/0000-0007-01219-312199"),
+                    inbox: namedNode("https://example.org/inbox/")
+                },
+            )
+
+            const notification = EventNotification.accept(
+                offer,
+                namedNode("https://orcid.org/0000-0007-01219-312200")
+            )
+
+            it('must be of type as:Accept', () => {
+                expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Accept"))
+            })
+
+            it('must have context', () => {
+                expect(notification).toHaveProperty('context')
+                expect(notification.context).toBeDefined()
+                expect(notification.context).toEqualRdfTerm(namedNode("https://acme.org/artifacts/alice/five_steps_to_success.html"))
+            })
+
+            it('must have inReplyTo', () => {
+                expect(notification).toHaveProperty('inReplyTo', offer.id)
+            })
+
+            it('must have target with inbox', () => {
+                expect(notification).toHaveProperty('target.id.id', 'https://orcid.org/0000-0007-01219-312199')
+                expect(notification).toHaveProperty('target.inbox.id', "https://example.org/inbox/")
+            })
         })
 
-        it('must have inReplyTo', () => {
-            expect(notification).toHaveProperty('inReplyTo', offer.id)
-        })
+        
     })
 
     describe('reject()', () => {
