@@ -10,7 +10,7 @@ import { Sink, Stream } from 'rdf-js'
 function agentToQuads(agent: IEventAgent): Quad[] {
     const quads: Quad[] = []
     agent.inbox && quads.push(quad(agent.id, LDP('inbox'), agent.inbox))
-    agent.name && quads.push(quad(agent.id, LDP('inbox'), agent.name))
+    agent.name && quads.push(quad(agent.id, AS('name'), agent.name))
     agent.type && agent.type.forEach((t) => quads.push(quad( agent.id, RDF('type'), t)))
     return quads
 }
