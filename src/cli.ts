@@ -95,7 +95,7 @@ program.command('grant')
   })
 
 program.command('login')
-  .description('Generate a login token')
+  .description('Generate a login token at the specified location')
   .action(async (options) => {
     const { name, email, password, idp, tokenLocation } = program.opts()
     const receiver = await Receiver.build({

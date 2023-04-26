@@ -219,6 +219,7 @@ Commands:
   receive [options] <inboxUrl>         Watch an inbox for new notifications
   init <baseUrl> [inboxPath]           Initialize an inbox
   grant <inboxUrl> <agentUri>          Grant an agent access to inbox
+  login                                Generate a login token at the specified location
   send [options] <inboxUrl> <path>     Send a notification to a inbox
   help [command]                       display help for command
 ```
