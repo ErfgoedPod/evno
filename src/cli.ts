@@ -94,6 +94,17 @@ program.command('grant')
     await receiver.grantAccess(inboxUrl, agentUri)
   })
 
+program.command('login')
+  .description('Generate a login token')
+  .action(async (options) => {
+    const { name, email, password, idp, tokenLocation } = program.opts()
+    const receiver = await Receiver.build({
+      name, email, password, idp, tokenLocation
+    });
+    (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId);
+    (!options.stdout) && console.log('Token is stored at \'%s\'', tokenLocation)
+  })
+
 program.command('send')
   .description("Send a notification to a inbox")
   .argument("<inboxUrl>", 'URL of the LDN inbox')
