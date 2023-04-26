@@ -1,13 +1,11 @@
 import { IEventNotification, IEventAgent, IEventObject } from "./interfaces.js"
 import { EventEmitter } from 'events'
-import { JsonLdParser } from "jsonld-streaming-parser"
 import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
-import { Store, Quad, NamedNode, Term, DataFactory, StreamParser } from 'n3'
+import { Store, Quad, NamedNode, Term, DataFactory } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
 import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util.js'
 import { Sink, Stream } from 'rdf-js'
-import { Readable } from 'stream'
 
 export default class EventNotification implements IEventNotification {
     private store: Store = new Store();
@@ -145,38 +143,6 @@ export default class EventNotification implements IEventNotification {
                 .on('error', (e: Error) => reject(e))
                 .on('end', () => { resolve(new EventNotification(quads)) })
         })
-    }
-
-    static async parseFromResponse(response: Response): Promise<EventNotification> {
-        const responseText = await response.text()
-        const contentType = response.headers.get('content-type')
-
-        // transform bodystream
-        //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
-
-        // TODO: Fix this when NodeJS vs. Stream API chaos is over
-        const bodyStream = new Readable()
-        bodyStream.push(responseText)
-        bodyStream.push(null)
-
-        let parser
-        switch(contentType) {
-            case "text/turtle":
-            case "application/n-triples": {
-                parser = new StreamParser({format: contentType != null ? contentType : undefined})
-                break
-            }
-            default: {
-                parser = JsonLdParser.fromHttpResponse(
-                    response.url,
-                    contentType || "application/ld+json"
-                )
-            }
-            
-        }
-
-        // parse the notification
-        return EventNotification.parse(bodyStream, parser)
     }
 
     public serialize(): Promise<string> {

@@ -8,9 +8,11 @@ import * as fs from 'fs'
 import { dirname } from 'path'
 import * as md5 from 'md5'
 import EventNotification from './notification.js'
-import { NamedNode } from 'n3'
+import { NamedNode, StreamParser } from 'n3'
 import { IEventAgent } from './interfaces.js'
 import { isNamedNode, isString } from './util.js'
+import { JsonLdParser } from "jsonld-streaming-parser"
+import { Readable } from 'stream'
 
 export default class Receiver extends EventEmitter {
 
@@ -145,13 +147,39 @@ export default class Receiver extends EventEmitter {
                         const response: Response = await this.fetch(item.url)
 
                         try {
+                            const responseText = await response.text()
+                            const contentType = response.headers.get('content-type')
                             // parse the notification
-                            const notification = await EventNotification.parseFromResponse(response)
+                            // transform bodystream
+                            //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
+
+                            // TODO: Fix this when NodeJS vs. Stream API chaos is over
+                            const bodyStream = new Readable()
+                            bodyStream.push(responseText)
+                            bodyStream.push(null)
+
+                            let parser
+                            switch (contentType) {
+                                case "text/turtle":
+                                case "application/n-triples": {
+                                    parser = new StreamParser({ format: contentType })
+                                    break
+                                }
+                                default: {
+                                    parser = JsonLdParser.fromHttpResponse(
+                                        response.url,
+                                        contentType || "application/ld+json"
+                                    )
+                                }
+
+                            }
+
+                            // parse the notification
+                            const notification = await EventNotification.parse(bodyStream, parser)
 
                             // emit an event with notification
                             const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
 
-                            const responseText = await response.text()
                             const hash = md5.default(responseText)
                             if (this.db && this.db.get(idToCheck) !== hash) {
                                 this.emit('notification', notification)
