@@ -65,6 +65,7 @@ export default class Receiver extends EventEmitter {
         pollingFrequency?: number
     }): Promise<Receiver> {
         let token
+        let session 
 
         if (options.tokenLocation) {
             if (fs.existsSync(options.tokenLocation)) {
@@ -75,11 +76,21 @@ export default class Receiver extends EventEmitter {
                 fs.writeFileSync(options.tokenLocation, JSON.stringify(token))
             }
         }
-        else {
+        else if (options.name && options.password) {
             token = await generateCSSToken(options)
         }
+        else {
+            // No token is needed?
+        }
 
-        const session = await authenticateToken(token, token.idp)
+        if (token) {
+            // If we have a token then login
+            session = await authenticateToken(token, token.idp)
+        }
+        else {
+            // Return a default session
+            session = { fetch: fetch } as SessionInfo;
+        }
 
         return new Receiver(session, options)
     }

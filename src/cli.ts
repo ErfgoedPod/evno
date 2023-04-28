@@ -32,8 +32,8 @@ program
   .option("-n, --name <username>", "Username")
   .option("-e, --email <email>", "Email")
   .option("-p, --password <password>", "Password")
-  .option("-i, --idp <idp>", "Identity provider", "http://localhost:3001/")
-  .option("-t, --tokenLocation <tokenLocation>", "Client token storage location", "./")
+  .option("-i, --idp <idp>", "Identity provider")
+  .option("-t, --tokenLocation <tokenLocation>", "Client token storage location")
   .option("-v, --verbose", "Output verbose logging", false)
 
 program.command('receive')
