@@ -7,6 +7,7 @@ import Sender from "./sender.js"
 import EventNotification from './notification.js'
 import * as fs from 'fs'
 import { JsonLdParser } from "jsonld-streaming-parser"
+import { getId } from "./util.js"
 import parse from 'parse-duration';
 
 
@@ -38,6 +39,7 @@ program
 program.command('receive')
   .description("Watch an inbox for new notifications")
   .argument("<inboxUrl>", 'Inbox URL to watch')
+  .argument("[path]", "Output path")
   .option("-c, --cachePath  [value]", "Path to cache database", ".cache/cache.dsb")
   .option("-s, --strategy <notification_id|activity_id>", "Strategy filter by notification_id or by activity_id", "activity_id")
   .option("-, --stdout", "Pipe output to stdout")
@@ -45,7 +47,7 @@ program.command('receive')
   .option("-f, --pollingFrequency  <duration>", "The frequency to poll the inbox", parseDuration, 1000)
   .option("-o, --out <value>", "Output directory (the content of the resource)")
   // @ts-ignore
-  .action(async (inboxUrl, options) => {
+  .action(async (inboxUrl, path?, options) => {
     const { name, email, password, idp, tokenLocation, verbose} = program.opts()
     const receiver = await Receiver.build({
       name, email, password, idp, tokenLocation, cache: !options.nocache, cachePath: options.cachePath, pollingFrequency: options.pollingFrequency
@@ -55,7 +57,17 @@ program.command('receive')
 
     receiver.start(inboxUrl, options.strategy)
     receiver.on('notification', async (n: EventNotification) => {
-      console.log(await n.serialize())
+      if (path) {
+        const id = getId().value;
+        const file = `${path}/${id}`;
+        if (verbose) {
+          console.log(`Generating ${file}`);
+        }
+        fs.writeFileSync(file,await n.serialize())
+      }
+      else {
+        console.log(await n.serialize())
+      }
     })
     receiver.on('error', e => {
       if (verbose) {
