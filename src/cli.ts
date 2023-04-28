@@ -57,11 +57,11 @@ program.command('receive')
     receiver.on('notification', async (n: EventNotification) => {
       console.log(await n.serialize())
     })
-    if (verbose){
-      receiver.on('error', e => {
+    receiver.on('error', e => {
+      if (verbose) {
         console.error(e)
-      })
-    }
+      }
+    });
   })
 
 program.command('init')
