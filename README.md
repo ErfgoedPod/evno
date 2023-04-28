@@ -216,7 +216,7 @@ Options:
   -h, --help                           display help for command
 
 Commands:
-  receive [options] <inboxUrl>         Watch an inbox for new notifications
+  receive [options] <inboxUrl> [path]  Watch an inbox for new notifications
   init <baseUrl> [inboxPath]           Initialize an inbox
   grant <inboxUrl> <agentUri>          Grant an agent access to inbox
   login                                Generate a login token at the specified location
