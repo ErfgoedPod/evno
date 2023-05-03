@@ -77,8 +77,8 @@ export default class Receiver extends EventEmitter {
             const session = await authenticateToken(token, token.idp)
             return new Receiver(session, options)
         } else {
-            token = await generateCSSToken(options);
-            if (options.tokenLocation && fs.existsSync(options.tokenLocation) && !(await fs.promises.lstat(options.tokenLocation)).isDirectory()){
+            token = await generateCSSToken(options)
+            if (options.tokenLocation && fs.existsSync(options.tokenLocation) && !(await fs.promises.lstat(options.tokenLocation)).isDirectory()) {
                 await fs.promises.writeFile(options.tokenLocation, JSON.stringify(token))
             }
         }
