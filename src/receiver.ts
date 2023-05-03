@@ -66,17 +66,21 @@ export default class Receiver extends EventEmitter {
     }): Promise<Receiver> {
         let token
 
-        if (options.tokenLocation) {
-            if (fs.existsSync(options.tokenLocation)) {
-                token = JSON.parse(fs.readFileSync(options.tokenLocation, 'utf8'))
+        if (options.tokenLocation && fs.existsSync(options.tokenLocation)) {
+            const stat = await fs.promises.lstat(options.tokenLocation)
+            if (stat.isDirectory())
+                throw new Error(`The token location ${options.tokenLocation} is a directory, not a file.`)
+
+            const tokenString = await fs.promises.readFile(options.tokenLocation, 'utf8')
+            token = JSON.parse(tokenString)
+
+            const session = await authenticateToken(token, token.idp)
+            return new Receiver(session, options)
+        } else {
+            token = await generateCSSToken(options);
+            if (options.tokenLocation && fs.existsSync(options.tokenLocation) && !(await fs.promises.lstat(options.tokenLocation)).isDirectory()){
+                await fs.promises.writeFile(options.tokenLocation, JSON.stringify(token))
             }
-            else {
-                token = await generateCSSToken(options)
-                fs.writeFileSync(options.tokenLocation, JSON.stringify(token))
-            }
-        }
-        else {
-            token = await generateCSSToken(options)
         }
 
         const session = await authenticateToken(token, token.idp)
