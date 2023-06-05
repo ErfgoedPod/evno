@@ -106,6 +106,19 @@ program.command('grant')
     await receiver.grantAccess(inboxUrl, agentUri)
   })
 
+program.command('prune')
+  .description('Remove one or all notifications in an inbox')
+  .argument("<inboxUrl>", 'URL of the LDN inbox')
+  .argument("[notificationUrl]", 'URI of the notification')
+  .action(async (inboxUrl, notificationUri, options) => {
+    const { name, email, password, idp, tokenLocation } = program.opts()
+    const receiver = await Receiver.build({
+      name, email, password, idp, tokenLocation
+    });
+    (!options.stdout) && console.log('Logged in as \'%s\' with id %s', name, receiver.webId)
+    await receiver.prune(inboxUrl, notificationUri)
+  })
+
 program.command('login')
   .description('Generate a login token at the specified location')
   .action(async (options) => {

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { poll } from 'poll'
-import { list, makeDirectory, changePermissions, authenticateToken, generateCSSToken } from "solid-bashlib"
+import { list, makeDirectory, changePermissions, authenticateToken, generateCSSToken, remove } from "solid-bashlib"
 import { IPermissionOperation } from 'solid-bashlib/dist/commands/solid-perms'
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
@@ -127,6 +127,18 @@ export default class Receiver extends EventEmitter {
         const permission: IPermissionOperation = { type: 'agent', append: true, id: agentId }
         console.log(`Granting ${agentId} append permissions on container ${inboxUrl}`)
         await changePermissions(inboxUrl, [permission], { fetch: this.fetch, verbose: true })
+    }
+
+    public async prune(inboxUrl: string, notificationUrl?: string) {
+        const fetchOptions = {
+            fetch: this.fetch,         // an (authenticated) fetch function
+            verbose: true
+        }
+        if (notificationUrl)
+            return remove(notificationUrl, fetchOptions)
+
+        const notifications = await list(inboxUrl, fetchOptions)
+        return Promise.all(notifications.map(n => remove(n.url, fetchOptions)))
     }
 
     public stop() {
