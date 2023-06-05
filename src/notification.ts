@@ -226,6 +226,10 @@ export default class EventNotification implements IEventNotification {
         return objects as NamedNode[]
     }
 
+    get activityType(): NamedNode | undefined {
+        return this.type.length > 0 ? this.type[0] : undefined
+    }
+
     get id(): NamedNode {
         return this.activity_id
     }
