@@ -21,6 +21,10 @@ export const AGENT_TYPES = [
     'Application', 'Group', 'Service'
 ].map(AS)
 
+export const OBJECT_PROPERTIES = [
+    'subject', 'relationship', 'object', 
+].map(AS)
+
 export function isNamedNode(term: any): term is NamedNode {
     return term instanceof NamedNode
 }
@@ -31,6 +35,10 @@ export function isAllowedActivityType(term: Term): boolean {
 
 export function isAllowedAgentType(term: Term): boolean {
     return isNamedNode(term) && !!AGENT_TYPES.find((type) => type.equals(term))
+}
+
+export function isAllowedObjectProperty(property: NamedNode): boolean {
+    return !!OBJECT_PROPERTIES.find((p) => p.equals(property))
 }
 
 export function isString(data: any): data is string {

@@ -4,14 +4,28 @@ import SerializerJsonld from '@rdfjs/serializer-jsonld-ext'
 import { Store, Quad, NamedNode, Term, DataFactory, Literal } from 'n3'
 const { quad } = DataFactory
 import { Context } from 'jsonld/jsonld-spec'
-import { RDF, isAllowedActivityType, isAllowedAgentType, AS, LDP, getId, isNamedNode } from './util.js'
+import { RDF, isAllowedActivityType, isAllowedAgentType, isAllowedObjectProperty, AS, LDP, getId, isNamedNode } from './util.js'
 import { Sink, Stream } from 'rdf-js'
 
 function agentToQuads(agent: IEventAgent): Quad[] {
     const quads: Quad[] = []
     agent.inbox && quads.push(quad(agent.id, LDP('inbox'), agent.inbox))
     agent.name && quads.push(quad(agent.id, AS('name'), agent.name))
-    agent.type && agent.type.forEach((t) => quads.push(quad( agent.id, RDF('type'), t)))
+    agent.type && agent.type.forEach((t) => quads.push(quad(agent.id, RDF('type'), t)))
+    return quads
+}
+
+function objectToQuads(object: IEventObject): Quad[] {
+    const quads: Quad[] = []
+    object.type.forEach((t) => quads.push(quad(object.id, RDF('type'), t)))
+
+    for (const property in object) {
+        const object_property = AS(property)
+        if (isAllowedObjectProperty(object_property) && isNamedNode(object[property])) {
+            quads.push(quad(object.id, object_property, object[property]))
+        }
+    }
+
     return quads
 }
 
@@ -38,23 +52,26 @@ export default class EventNotification implements IEventNotification {
     static build(options: { type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?: NamedNode, context?: NamedNode, id?: NamedNode }): EventNotification {
         const activity_id = options.id || getId()
 
-        const actor = options.actor
-        
+
         const quads = [
-            quad(activity_id, RDF('type'), options.type),
-            quad(activity_id, AS('object'), options.object.id)
+            quad(activity_id, RDF('type'), options.type)
         ]
-        
-        if (isNamedNode(actor)){
+
+        const object = options.object
+        quads.push(quad(activity_id, AS('object'), options.object.id))
+        quads.push(...objectToQuads(object))
+
+        const actor = options.actor
+        if (isNamedNode(actor)) {
             quads.push(quad(activity_id, AS('actor'), actor as NamedNode))
         } else {
             quads.push(quad(activity_id, AS('actor'), actor.id))
             quads.push(...agentToQuads(actor))
         }
 
-        if (options.target){
+        if (options.target) {
             const target = options.target
-            if (isNamedNode(target)){
+            if (isNamedNode(target)) {
                 quads.push(quad(activity_id, AS('target'), target as NamedNode))
             } else {
                 quads.push(quad(activity_id, AS('target'), target.id))
@@ -62,16 +79,16 @@ export default class EventNotification implements IEventNotification {
             }
         }
 
-        if (options.origin){
+        if (options.origin) {
             const origin = options.origin
-            if (isNamedNode(origin)){
+            if (isNamedNode(origin)) {
                 quads.push(quad(activity_id, AS('origin'), origin as NamedNode))
             } else {
                 quads.push(quad(activity_id, AS('origin'), origin.id))
                 quads.push(...agentToQuads(origin))
             }
         }
-        
+
         options.inReplyTo && quads.push(quad(activity_id, AS('inReplyTo'), options.inReplyTo))
         options.context && quads.push(quad(activity_id, AS('context'), options.context))
 
