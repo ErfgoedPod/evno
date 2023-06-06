@@ -1,4 +1,4 @@
-import { IAuthOptions, IEventAgent } from './interfaces.js'
+import { IAuthOptions, IEventAgent, IEventObject } from './interfaces.js'
 import EventNotification from './notification.js'
 import { authenticateToken, generateCSSToken } from "solid-bashlib"
 import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
@@ -59,7 +59,7 @@ export default class Sender {
         return { fetch, webId }
     }
 
-    public async announce(object: NamedNode, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
+    public async announce(object: NamedNode | IEventObject, context: NamedNode | EventNotification | undefined, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.announce(object, this.actor, context), inboxUrl, options)
     }
 

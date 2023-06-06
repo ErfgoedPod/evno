@@ -78,12 +78,12 @@ export default class EventNotification implements IEventNotification {
         return new EventNotification(quads)
     }
 
-    static announce(object: NamedNode, actor: NamedNode | IEventAgent, context?: NamedNode | EventNotification): EventNotification {
+    static announce(object: NamedNode | IEventObject, actor: NamedNode | IEventAgent, context?: NamedNode | EventNotification): EventNotification {
 
         return EventNotification.build({
             type: AS('Announce'),
             actor: actor,
-            object: { id: object, type: [AS('Object')] },
+            object: isNamedNode(object) ? { id: object, type: [AS('Object')] } : object,
             ...(isNamedNode(context) && { context: context }),
             ...((context instanceof EventNotification) && { inReplyTo: context.id, context: context.object.id }),
         })
