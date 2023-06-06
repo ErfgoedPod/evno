@@ -63,7 +63,7 @@ export default class Sender {
         return this.send(EventNotification.announce(object, this.actor, context), inboxUrl, options)
     }
 
-    public async create(object: NamedNode, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
+    public async create(object: NamedNode | IEventObject, inboxUrl?: string, options?: IAuthOptions): Promise<Response> {
         return this.send(EventNotification.create(object, this.actor), inboxUrl, options)
     }
 

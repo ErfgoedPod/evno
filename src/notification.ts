@@ -89,12 +89,12 @@ export default class EventNotification implements IEventNotification {
         })
     }
 
-    static create(object: NamedNode, actor: NamedNode | IEventAgent): EventNotification {
+    static create(object: NamedNode | IEventObject, actor: NamedNode | IEventAgent): EventNotification {
 
         return EventNotification.build({
             type: AS('Create'),
             actor: actor,
-            object: { id: object, type: [AS('Object')] }
+            object: isNamedNode(object) ? { id: object, type: [AS('Object')] } : object,
         })
     }
 
