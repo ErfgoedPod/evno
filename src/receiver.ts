@@ -198,8 +198,11 @@ export default class Receiver extends EventEmitter {
 
                             const hash = md5.default(responseText)
                             if (this.db && this.db.get(idToCheck) !== hash) {
+                                console.log(`${idToCheck} is not in cache or cache is disabled; emitting`)
                                 this.emit('notification', notification)
                                 this.db.set(idToCheck, hash)
+                            } else {
+                                console.log(`Found ${idToCheck} in cache; skip!`)
                             }
                         }
                         catch (e) {
