@@ -6,13 +6,10 @@ import { SessionInfo } from 'solid-bashlib/dist/authentication/CreateFetch'
 import { ICachedStorage, factory } from '@qiwi/primitive-storage'
 import * as fs from 'fs'
 import { dirname } from 'path'
-import * as md5 from 'md5'
 import EventNotification from './notification.js'
-import { NamedNode, StreamParser } from 'n3'
+import { NamedNode, DataFactory, Quad } from 'n3'
 import { IEventAgent } from './interfaces.js'
-import { isNamedNode, isString } from './util.js'
-import { JsonLdParser } from "jsonld-streaming-parser"
-import { Readable } from 'stream'
+import { FOAF, LDP, RDF, isNamedNode, isString, parseResponse } from './util.js'
 
 export default class Receiver extends EventEmitter {
 
@@ -129,6 +126,42 @@ export default class Receiver extends EventEmitter {
         await changePermissions(inboxUrl, [permission], { fetch: this.fetch, verbose: true })
     }
 
+    public async fetchAgent(agent: string | NamedNode | IEventAgent): Promise<IEventAgent> {
+        const agentId = this.agentIdToString(agent)
+        if (!this.fetch) {
+            if (isString(agent)) return { id: DataFactory.namedNode(agent) }
+            return isNamedNode(agent) ? { id: agent } : (agent as IEventAgent)
+        }
+
+        const response = await this.fetch(agentId)
+        const { bodyStream, parser } = await parseResponse(response)
+
+        const result: any = {}
+        return new Promise((resolve) => {
+            parser
+                .import(bodyStream)
+                .on('data', (q: Quad) => {
+                    if (q.predicate.equals(RDF('type')) && (q.object.equals(FOAF('Person')) || q.object.equals(FOAF('Organization')))) {
+                        result.id = q.subject
+                        result.type = [q.object]
+                    }
+
+                    if (q.predicate.equals(FOAF('name')) && q.object.termType == 'Literal') {
+                        result.name = q.object
+                    }
+
+                    if (q.predicate.equals(LDP('inbox')) && isNamedNode(q.object)) {
+                        result.inbox = q.object
+                    }
+
+                })
+                .on('error', (e: Error) => { throw e })
+                .on('end', () => {
+                    resolve(result as IEventAgent)
+                })
+        })
+    }
+
     public async prune(inboxUrl: string, notificationUrl?: string) {
         const fetchOptions = {
             fetch: this.fetch,         // an (authenticated) fetch function
@@ -163,32 +196,7 @@ export default class Receiver extends EventEmitter {
                         const response: Response = await this.fetch(item.url)
 
                         try {
-                            const responseText = await response.text()
-                            const contentType = response.headers.get('content-type')
-                            // parse the notification
-                            // transform bodystream
-                            //const bodyStream = new ReadableWebToNodeStream(response.body || new ReadableStream())
-
-                            // TODO: Fix this when NodeJS vs. Stream API chaos is over
-                            const bodyStream = new Readable()
-                            bodyStream.push(responseText)
-                            bodyStream.push(null)
-
-                            let parser
-                            switch (contentType) {
-                                case "text/turtle":
-                                case "application/n-triples": {
-                                    parser = new StreamParser({ format: contentType })
-                                    break
-                                }
-                                default: {
-                                    parser = JsonLdParser.fromHttpResponse(
-                                        response.url,
-                                        contentType || "application/ld+json"
-                                    )
-                                }
-
-                            }
+                            const { bodyStream, parser, hash } = await parseResponse(response)
 
                             // parse the notification
                             const notification = await EventNotification.parse(bodyStream, parser)
@@ -196,7 +204,6 @@ export default class Receiver extends EventEmitter {
                             // emit an event with notification
                             const idToCheck = strategy == 'notification_id' ? item.url : notification.id.value
 
-                            const hash = md5.default(responseText)
                             if (this.db && this.db.get(idToCheck) !== hash) {
                                 console.log(`${idToCheck} is not in cache or cache is disabled; emitting`)
                                 this.emit('notification', notification)
