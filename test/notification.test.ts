@@ -108,6 +108,42 @@ describe('EventNotification', () => {
             // })
         })
 
+        describe('with extensive object', () => {
+            const notification = EventNotification.build({
+                type: namedNode("https://www.w3.org/ns/activitystreams#Announce"),
+                actor: namedNode("https://orcid.org/0000-0007-01219-312199"),
+                object: {
+                    id: namedNode(`http://example.org/obj`),
+                    type: [namedNode("https://www.w3.org/ns/activitystreams#Relationship")],
+                    subject: namedNode(`http://example.org/s`),
+                    relationship: namedNode(`http://example.org/p`),
+                    object: namedNode(`http://example.org/o`)
+
+                },
+                id: namedNode("https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
+            })
+
+            it('has correct id', () => {
+                expect(notification).toHaveProperty('id.id', "https://acme.org/events/alice/0F402B08-F676-40EE-9D4B-480B3F985B65")
+            })
+
+            it('creates notification object with id', () => {
+                expect(notification).toHaveProperty('actor.id.id', 'https://orcid.org/0000-0007-01219-312199')
+                expect(notification).toHaveProperty('object.id.id', 'http://example.org/obj')
+            })
+
+            it('parses object correctly', () => {
+                expect(notification.object.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Relationship"))
+                expect(notification.object).toHaveProperty('subject', namedNode('http://example.org/s'))
+                expect(notification.object).toHaveProperty('relationship', namedNode('http://example.org/p'))
+                expect(notification.object).toHaveProperty('object', namedNode('http://example.org/o'))
+            })
+
+            it('has correct types', () => {
+                expect(notification.type).toContainEqual(namedNode("https://www.w3.org/ns/activitystreams#Announce"))
+            })
+        })
+
         describe('with actor inbox', () => {
             const notification = EventNotification.build({
                 type: namedNode("https://www.w3.org/ns/activitystreams#Announce"),

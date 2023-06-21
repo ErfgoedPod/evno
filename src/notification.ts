@@ -52,13 +52,12 @@ export default class EventNotification implements IEventNotification {
     static build(options: { type: NamedNode, actor: NamedNode | IEventAgent, object: IEventObject, target?: NamedNode | IEventAgent, origin?: NamedNode | IEventAgent, inReplyTo?: NamedNode, context?: NamedNode, id?: NamedNode }): EventNotification {
         const activity_id = options.id || getId()
 
-
         const quads = [
             quad(activity_id, RDF('type'), options.type)
         ]
 
         const object = options.object
-        quads.push(quad(activity_id, AS('object'), options.object.id))
+        quads.push(quad(activity_id, AS('object'), object.id))
         quads.push(...objectToQuads(object))
 
         const actor = options.actor
@@ -190,7 +189,7 @@ export default class EventNotification implements IEventNotification {
 
             parser
                 .import(stream)
-                .on('data', (q) => quads.push(q))
+                .on('data', (q: Quad) => quads.push(q))
                 .on('error', (e: Error) => reject(e))
                 .on('end', () => { resolve(new EventNotification(quads)) })
         })
@@ -265,10 +264,18 @@ export default class EventNotification implements IEventNotification {
 
     get object(): IEventObject {
         const object_id = this.store.getObjects(this.activity_id, AS('object'), null)[0]
-        return {
+        const result:IEventObject = {
             id: object_id as NamedNode,
-            type: this.store.getObjects(object_id, RDF('type'), null).filter(isAllowedAgentType) as NamedNode[]
+            type: this.store.getObjects(object_id, RDF('type'), null) as NamedNode[]
         }
+
+        if (result.type.some(t => t.equals(AS('Relationship')))) {
+            result.subject = this.store.getObjects(object_id, AS('subject'), null)[0] as NamedNode;
+            result.relationship = this.store.getObjects(object_id, AS('relationship'), null)[0] as NamedNode;
+            result.object = this.store.getObjects(object_id, AS('object'), null)[0] as NamedNode;
+        }
+
+        return result
     }
 
     get inReplyTo(): NamedNode | undefined {
