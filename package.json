@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "license": "MIT",
   "main": "dist/index.js",
   "bin": "dist/cli.js",
