@@ -76,6 +76,7 @@ export async function parseResponse(response: Response) {
         case "text/turtle":
         case "application/n-triples": {
             parser = new StreamParser({ format: contentType })
+            break
         }
         default: {
             parser = JsonLdParser.fromHttpResponse(
